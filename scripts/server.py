@@ -8,6 +8,7 @@ Aesthetic: Professional Black & Cream minimal studio design (Zero neon).
 
 import os
 import sys
+import time
 import json
 import asyncio
 import argparse
@@ -101,11 +102,65 @@ class BrowserManager:
         self.ws_clients = set()
         self.agent_status = "Idle"
         self.current_thought = "Agent initialized and ready for instructions."
+        self.copilot_mode = "AUTONOMOUS"  # "AUTONOMOUS" or "HUMAN_TAKEOVER"
+        self.audit_events = []
+        self.console_logs = []
+        self.network_logs = []
+        self.event_counter = 0
         self.user_prompt = None
         self.user_done_event = asyncio.Event()
         self.is_running = False
         self._lock = asyncio.Lock()
 
+    def _hook_page_observability(self, p):
+        try:
+            p.on("console", lambda msg: asyncio.create_task(self.log_console(msg.type, msg.text)))
+            p.on("response", lambda resp: asyncio.create_task(self.log_network(resp.request.method, resp.url, resp.status)))
+        except Exception:
+            pass
+
+    async def log_audit(self, category, title, details="", status="success", duration_ms=None):
+        self.event_counter += 1
+        event = {
+            "id": self.event_counter,
+            "time": time.strftime("%H:%M:%S"),
+            "category": category,
+            "title": title,
+            "details": details,
+            "status": status,
+            "duration_ms": duration_ms
+        }
+        self.audit_events.append(event)
+        if len(self.audit_events) > 200:
+            self.audit_events.pop(0)
+
+        if self.ws_clients:
+            msg = json.dumps({"type": "audit_event", "event": event})
+            coros = [ws.send_str(msg) for ws in list(self.ws_clients) if not ws.closed]
+            if coros:
+                await asyncio.gather(*coros, return_exceptions=True)
+
+    async def log_console(self, log_type, text):
+        entry = {"time": time.strftime("%H:%M:%S"), "type": log_type, "text": text[:500]}
+        self.console_logs.append(entry)
+        if len(self.console_logs) > 150:
+            self.console_logs.pop(0)
+        if self.ws_clients:
+            msg = json.dumps({"type": "console_log", "log": entry})
+            coros = [ws.send_str(msg) for ws in list(self.ws_clients) if not ws.closed]
+            if coros:
+                await asyncio.gather(*coros, return_exceptions=True)
+
+    async def log_network(self, method, url, status, duration=None):
+        entry = {"time": time.strftime("%H:%M:%S"), "method": method, "url": url[:140], "status": status}
+        self.network_logs.append(entry)
+        if len(self.network_logs) > 150:
+            self.network_logs.pop(0)
+        if self.ws_clients:
+            msg = json.dumps({"type": "network_log", "log": entry})
+            coros = [ws.send_str(msg) for ws in list(self.ws_clients) if not ws.closed]
+            if coros:
+                await asyncio.gather(*coros, return_exceptions=True)
     @property
     def page(self):
         pages = self.context.pages if self.context else []
@@ -156,20 +211,26 @@ class BrowserManager:
             await self.context.new_page()
             self.active_index = 0
 
+        if self.page:
+            self._hook_page_observability(self.page)
+
         await self._setup_cdp()
         
         if self.page and self.page.url == "about:blank":
             await self.page.goto("https://www.google.com")
 
         self.is_running = True
+        await self.log_audit("SYSTEM", "Enterprise Browser Engine Ready", f"Profile: {self.profile_dir}", "success")
         print(f"[*] Persistent browser launched. Profile: {self.profile_dir}")
 
     async def _on_new_page(self, new_page):
+        self._hook_page_observability(new_page)
         await asyncio.sleep(0.4)
         pages = self.context.pages
         self.active_index = len(pages) - 1
         await self._setup_cdp()
         await self.broadcast_status()
+        await self.log_audit("TAB_OPEN", f"New tab opened ({len(pages)} active tabs)", new_page.url or "about:blank", "info")
 
     async def _setup_cdp(self):
         if not self.page:
@@ -491,6 +552,7 @@ async def api_navigate(request):
     if not url:
         return web.json_response({"error": "Missing url"}, status=400)
     
+    t0 = time.time()
     await browser_mgr.broadcast_thought(f"Navigating to {url}...", "Loading Page")
     browser_mgr.agent_status = f"Navigating to {url}..."
     await browser_mgr.broadcast_status()
@@ -498,10 +560,14 @@ async def api_navigate(request):
     try:
         await browser_mgr.page.goto(url, wait_until="domcontentloaded", timeout=30000)
         curr_title = await browser_mgr.page.title()
+        dur = int((time.time() - t0) * 1000)
         await browser_mgr.broadcast_thought(f"Loaded page: {curr_title} ({url})", "Ready")
+        await browser_mgr.log_audit("NAVIGATE", f"Navigated to {url}", f"Title: '{curr_title}' • {dur}ms", "success", dur)
         res = {"success": True, "url": browser_mgr.page.url, "title": curr_title}
     except Exception as e:
+        dur = int((time.time() - t0) * 1000)
         await browser_mgr.broadcast_thought(f"Navigation error: {str(e)}", "Error")
+        await browser_mgr.log_audit("NAVIGATE", f"Failed navigating to {url}", str(e), "error", dur)
         res = {"success": False, "error": str(e), "url": browser_mgr.page.url}
     
     browser_mgr.agent_status = "Idle"
@@ -592,9 +658,11 @@ async def api_click(request):
             return web.json_response({"error": "Provide selector, text, or (x, y)"}, status=400)
         
         await browser_mgr.broadcast_thought(f"Completed click on {target_desc}.", "Ready")
+        await browser_mgr.log_audit("CLICK", f"Clicked {target_desc}", f"Target: {target_desc}", "success")
         return web.json_response({"success": True})
     except Exception as e:
         await browser_mgr.broadcast_thought(f"Click failed: {str(e)}", "Error")
+        await browser_mgr.log_audit("CLICK", f"Click failed on {target_desc}", str(e), "error")
         return web.json_response({"success": False, "error": str(e)}, status=500)
 
 async def api_type(request):
@@ -605,6 +673,9 @@ async def api_type(request):
 
     try:
         target_desc = selector or "input field"
+        is_sensitive = any(k in (selector or "").lower() for k in ["password", "pwd", "token", "secret", "cvv", "pin", "otp"])
+        masked_val = "••••••••" if is_sensitive else text
+
         if selector and browser_mgr.page:
             try:
                 loc = browser_mgr.page.locator(selector).first
@@ -621,7 +692,7 @@ async def api_type(request):
             except Exception:
                 pass
 
-        await browser_mgr.broadcast_thought(f"Typing into {target_desc}: '{text}'...", "Typing")
+        await browser_mgr.broadcast_thought(f"Typing into {target_desc}: '{masked_val}'...", "Typing")
         await browser_mgr.broadcast_cursor(0, 0, "type")
 
         if selector:
@@ -634,9 +705,11 @@ async def api_type(request):
                 await browser_mgr.page.keyboard.press(press)
 
         await browser_mgr.broadcast_thought(f"Finished typing into {target_desc}.", "Ready")
+        await browser_mgr.log_audit("TYPE", f"Typed into {target_desc}", f"Value: '{masked_val}'" + (f" • Key: {press}" if press else ""), "success")
         return web.json_response({"success": True})
     except Exception as e:
         await browser_mgr.broadcast_thought(f"Typing failed: {str(e)}", "Error")
+        await browser_mgr.log_audit("TYPE", f"Typing failed on {target_desc}", str(e), "error")
         return web.json_response({"success": False, "error": str(e)}, status=500)
 
 async def api_cursor(request):
@@ -698,15 +771,52 @@ async def api_prompt_user(request):
     data = await request.json()
     message = data.get("message", "Action required from user on screen.")
     browser_mgr.user_prompt = message
+    browser_mgr.copilot_mode = "HUMAN_TAKEOVER"
     browser_mgr.user_done_event.clear()
     await browser_mgr.broadcast_status()
+    await browser_mgr.log_audit("HANDOFF", "Human Verification Requested", message, "warning")
     return web.json_response({"success": True, "message": message})
 
 async def api_user_done(request):
     browser_mgr.user_prompt = None
+    browser_mgr.copilot_mode = "AUTONOMOUS"
     browser_mgr.user_done_event.set()
     await browser_mgr.broadcast_status()
+    await browser_mgr.log_audit("HANDOFF", "Human Verification Completed", "Control handed back to Autonomous Agent", "success")
     return web.json_response({"success": True})
+
+async def api_copilot_mode(request):
+    data = await request.json()
+    mode = data.get("mode", "AUTONOMOUS")
+    browser_mgr.copilot_mode = mode
+    await browser_mgr.broadcast_status()
+    await browser_mgr.log_audit("CO_PILOT", f"Switched mode to {mode}", f"Active controller: {mode}", "info")
+    return web.json_response({"success": True, "mode": mode})
+
+async def api_get_audit(request):
+    return web.json_response({
+        "success": True,
+        "events": browser_mgr.audit_events,
+        "console": browser_mgr.console_logs,
+        "network": browser_mgr.network_logs,
+        "copilotMode": browser_mgr.copilot_mode
+    })
+
+async def api_export_audit(request):
+    events = browser_mgr.audit_events
+    md = "# Agent Live Browser - Session Audit Report\n\n"
+    md += f"- **Generated At**: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+    md += f"- **Total Logged Steps**: {len(events)}\n"
+    md += f"- **Active Target URL**: {browser_mgr.page.url if browser_mgr.page else 'None'}\n\n"
+    md += "## Execution Timeline & Audit Log\n\n"
+    md += "| Step | Time | Category | Action | Details | Status |\n"
+    md += "|---|---|---|---|---|---|\n"
+    for e in events:
+        md += f"| {e['id']} | {e['time']} | `{e['category']}` | {e['title']} | {e.get('details', '')} | `{e['status']}` |\n"
+    
+    return web.Response(text=md, content_type="text/markdown", headers={
+        "Content-Disposition": "attachment; filename=\"session-audit-report.md\""
+    })
 
 async def api_wait_user(request):
     timeout = 300
@@ -764,6 +874,9 @@ async def main():
     app.router.add_post("/api/read", api_read)
     app.router.add_post("/api/eval", api_eval)
     app.router.add_post("/api/cursor", api_cursor)
+    app.router.add_post("/api/copilot/mode", api_copilot_mode)
+    app.router.add_get("/api/audit", api_get_audit)
+    app.router.add_get("/api/audit/export", api_export_audit)
     app.router.add_post("/api/screenshot", api_screenshot)
     app.router.add_post("/api/prompt_user", api_prompt_user)
     app.router.add_post("/api/user_done", api_user_done)

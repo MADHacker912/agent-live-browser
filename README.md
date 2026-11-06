@@ -22,11 +22,13 @@ Designed for AI coding assistants (Antigravity, Claude, ChatGPT, Cursor) that ne
 
 - **📺 Real-Time Interactive Screencast**: Streams the browser viewport with low latency via Chrome DevTools Protocol (CDP) directly onto an HTML5 canvas at `http://localhost:7654`.
 - **🛡️ Google & OAuth Secure Login (BotGuard Bypass)**: Completely removes `--enable-automation` and patches `navigator.webdriver`, `chrome.runtime`, and client plugins. Fixes Google's *"This browser or app may not be secure"* error on `accounts.google.com`.
+- **📋 Step-by-Step Audit & Execution Timeline**: Enterprise-grade structured audit trail recording every navigation, click, typing event, and handoff with millisecond duration benchmarks and one-click Markdown export.
+- **⚡ Dual-Mode Co-Pilot & Safe Takeover**: Switch seamlessly between `Autonomous AI Agent` and `Human Takeover` with automated credential masking (`••••••••`) for passwords and OTPs.
+- **🔍 Integrated DevTools Drawer (`Ctrl+L`)**: Built-in slide-out studio drawer displaying live Execution Timeline, JavaScript runtime console logs, and HTTP network requests.
 - **🤝 Zero-Friction Human-in-the-Loop Login**: When 2FA, CAPTCHA, or QR code authentication is required (e.g., WhatsApp Web, Google Workspace, LinkedIn), the agent halts and requests user action. You click, type, or scan on `localhost:7654`, click **"Done"**, and the agent instantly resumes.
 - **🔒 Persistent Isolated Profile**: All cookies, session states, and local storage are permanently preserved in `~/.agent-live-browser/profile`. Your primary desktop browser remains completely untouched.
 - **📑 Full Multi-Tab Multitasking**: Open multiple tabs, switch between them, or close them with a single click. External popups (such as Google OAuth) automatically appear and activate.
-- **🎨 3D Claymorphic AI Cursor**: Whenever the agent clicks, hovers, or types, a tactile cream clay pointer with physical depression and expanding ripple waves shows you exactly what the agent is doing.
-- **⚡ Dual Control Modes**: Both the human (via mouse/keyboard on `localhost:7654`) and the AI (via CLI or REST API) can interact with the browser concurrently.
+- **🎨 3D Claymorphic AI Cursor**: Fluid glide navigation with physical press-down depression (`scale(0.78)`), expanding ripple waves, and real-time plain-English thinking process HUD.
 
 ---
 

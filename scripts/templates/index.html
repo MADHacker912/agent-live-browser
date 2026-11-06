@@ -515,6 +515,272 @@
       border-color: var(--sand-500);
     }
 
+    /* Co-Pilot Mode Toggle */
+    .copilot-toggle-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--charcoal-900);
+      border: 1px solid var(--border-subtle);
+      color: var(--cream-200);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .copilot-toggle-container:hover {
+      border-color: var(--sand-500);
+      background: var(--bg-surface-hover);
+    }
+    .copilot-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+    }
+    .copilot-toggle-container.takeover {
+      background: #271c14;
+      border-color: #5c3f2b;
+      color: #fef08a;
+    }
+    .copilot-toggle-container.takeover .copilot-dot {
+      background: #eab308;
+      box-shadow: 0 0 6px rgba(234, 179, 8, 0.5);
+    }
+
+    /* DevTools Toggle Button */
+    .devtools-btn {
+      background: var(--charcoal-900);
+      color: var(--cream-300);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 5px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .devtools-btn:hover {
+      background: var(--bg-surface-hover);
+      color: var(--cream-100);
+      border-color: var(--border-hover);
+    }
+    .devtools-counter {
+      background: var(--charcoal-800);
+      color: var(--cream-200);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* DevTools & Observability Drawer */
+    .devtools-drawer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 410px;
+      background: rgba(18, 18, 20, 0.96);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border-subtle);
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+      z-index: 70;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+    .devtools-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      background: var(--bg-chrome);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .drawer-tab-btn {
+      background: transparent;
+      color: var(--sand-500);
+      border: 1px solid transparent;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .drawer-tab-btn:hover {
+      color: var(--cream-200);
+      background: var(--charcoal-800);
+    }
+    .drawer-tab-btn.active {
+      color: var(--charcoal-900);
+      background: var(--cream-200);
+      border-color: var(--cream-200);
+    }
+
+    .drawer-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .drawer-action-btn {
+      background: var(--charcoal-900);
+      color: var(--cream-300);
+      border: 1px solid var(--border-subtle);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .drawer-action-btn:hover {
+      background: var(--bg-surface-hover);
+      color: var(--cream-100);
+      border-color: var(--border-hover);
+    }
+
+    .drawer-pane {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .drawer-pane.active {
+      display: flex;
+    }
+    .pane-header-info {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--sand-500);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .text-link-btn {
+      background: transparent;
+      border: none;
+      color: var(--sand-500);
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .text-link-btn:hover { color: var(--cream-100); }
+
+    .timeline-list, .console-list, .network-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Timeline Step Card */
+    .timeline-card {
+      background: var(--charcoal-900);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 9px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      transition: border-color 0.15s;
+    }
+    .timeline-card:hover {
+      border-color: var(--border-hover);
+    }
+    .timeline-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .timeline-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--charcoal-800);
+      border: 1px solid var(--border-subtle);
+      color: var(--cream-300);
+    }
+    .timeline-badge.NAVIGATE { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
+    .timeline-badge.CLICK { color: #f4efe6; border-color: var(--sand-500); }
+    .timeline-badge.TYPE { color: #fef08a; border-color: rgba(254, 240, 138, 0.3); }
+    .timeline-badge.HANDOFF { color: #f97316; border-color: rgba(249, 115, 22, 0.3); }
+    .timeline-badge.SYSTEM { color: #a8a29e; }
+
+    .timeline-time {
+      font-size: 10px;
+      font-family: ui-monospace, monospace;
+      color: var(--sand-600);
+    }
+    .timeline-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--cream-100);
+      word-break: break-word;
+    }
+    .timeline-details {
+      font-size: 11px;
+      color: var(--sand-500);
+      font-family: ui-monospace, monospace;
+      word-break: break-all;
+    }
+
+    /* Console & Network items */
+    .console-item {
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--charcoal-900);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      gap: 8px;
+    }
+    .console-item.error { color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+    .console-item.warn { color: #fde047; border-color: rgba(253, 224, 71, 0.3); }
+    .console-item.log { color: var(--cream-300); }
+
+    .network-item {
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      background: var(--charcoal-900);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .net-method { font-weight: 700; color: var(--cream-200); }
+    .net-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sand-500); }
+    .net-status { font-weight: 700; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+    .net-status.s2xx { color: #4ade80; }
+    .net-status.s4xx, .net-status.s5xx { color: #f87171; }
+
     /* Bottom Status Footer */
     footer {
       background: var(--bg-chrome);
@@ -569,6 +835,18 @@
 
     <button class="btn-go" id="btn-go">Navigate ↵</button>
 
+    <!-- Co-Pilot Mode Toggle (Autonomous vs Human Takeover) -->
+    <div class="copilot-toggle-container" id="copilot-mode-toggle" onclick="toggleCopilotMode()" title="Toggle between Autonomous AI Agent and Manual Human Takeover">
+      <span class="copilot-dot"></span>
+      <span id="copilot-mode-text">Autonomous</span>
+    </div>
+
+    <!-- DevTools / Audit Drawer Toggle -->
+    <button class="devtools-btn" id="btn-devtools" onclick="toggleDevTools()" title="Toggle Execution Timeline & DevTools (Ctrl+L)">
+      <span>⚡ Audit & Logs</span>
+      <span class="devtools-counter" id="audit-badge-counter">0</span>
+    </button>
+
     <div class="connection-status live" id="ws-status">
       <span class="status-dot"></span>
       <span id="ws-status-text">Studio Live</span>
@@ -613,6 +891,48 @@
       </div>
       <div class="thinking-badge" id="live-action-badge">Ready</div>
     </div>
+
+    <!-- DevTools & Observability Drawer -->
+    <aside id="devtools-drawer" class="devtools-drawer">
+      <div class="drawer-header">
+        <div class="drawer-tabs">
+          <button class="drawer-tab-btn active" id="tab-btn-timeline" onclick="switchDevTab('timeline')">Timeline</button>
+          <button class="drawer-tab-btn" id="tab-btn-console" onclick="switchDevTab('console')">Console (<span id="console-count">0</span>)</button>
+          <button class="drawer-tab-btn" id="tab-btn-network" onclick="switchDevTab('network')">Network (<span id="network-count">0</span>)</button>
+        </div>
+        <div class="drawer-actions">
+          <button class="drawer-action-btn" onclick="exportAuditReport()" title="Export Markdown Audit Report">📥 Export</button>
+          <button class="drawer-action-btn" onclick="toggleDevTools()" title="Close Drawer">✕</button>
+        </div>
+      </div>
+
+      <!-- Timeline Pane -->
+      <div class="drawer-pane active" id="pane-timeline">
+        <div class="pane-header-info">
+          <span>STEP-BY-STEP AUDIT TRAIL</span>
+          <button class="text-link-btn" onclick="clearAuditTimeline()">Clear</button>
+        </div>
+        <div class="timeline-list" id="timeline-list">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Console Pane -->
+      <div class="drawer-pane" id="pane-console">
+        <div class="pane-header-info">
+          <span>BROWSER RUNTIME CONSOLE</span>
+        </div>
+        <div class="console-list" id="console-list"></div>
+      </div>
+
+      <!-- Network Pane -->
+      <div class="drawer-pane" id="pane-network">
+        <div class="pane-header-info">
+          <span>HTTP NETWORK REQUESTS</span>
+        </div>
+        <div class="network-list" id="network-list"></div>
+      </div>
+    </aside>
   </div>
 
   <!-- Footer Information -->
@@ -813,7 +1133,16 @@
             updateAgentCursor(msg.x, msg.y, msg.action);
           } else if (msg.type === 'thought') {
             updateThinkingHUD(msg.thought, msg.action);
+          } else if (msg.type === 'audit_event') {
+            addAuditEvent(msg.event);
+          } else if (msg.type === 'console_log') {
+            addConsoleLog(msg.log);
+          } else if (msg.type === 'network_log') {
+            addNetworkLog(msg.log);
           } else if (msg.type === 'status') {
+            if (msg.copilotMode) {
+              updateCopilotUI(msg.copilotMode);
+            }
             if (msg.currentThought) {
               updateThinkingHUD(msg.currentThought, msg.agentStatus);
             }
@@ -1065,6 +1394,139 @@
       fetch('/api/user_done', { method: 'POST' });
       banner.classList.remove('active');
     });
+
+    // --- Enterprise Co-Pilot & DevTools Controller ---
+    let currentCopilotMode = 'AUTONOMOUS';
+    const copilotToggle = document.getElementById('copilot-mode-toggle');
+    const copilotText = document.getElementById('copilot-mode-text');
+    const devtoolsDrawer = document.getElementById('devtools-drawer');
+    const auditBadgeCounter = document.getElementById('audit-badge-counter');
+    const timelineList = document.getElementById('timeline-list');
+    const consoleList = document.getElementById('console-list');
+    const networkList = document.getElementById('network-list');
+    const consoleCount = document.getElementById('console-count');
+    const networkCount = document.getElementById('network-count');
+
+    let auditCount = 0;
+    let cCount = 0;
+    let nCount = 0;
+
+    function updateCopilotUI(mode) {
+      currentCopilotMode = mode;
+      if (mode === 'HUMAN_TAKEOVER') {
+        copilotToggle.classList.add('takeover');
+        copilotText.innerText = 'Human Takeover';
+      } else {
+        copilotToggle.classList.remove('takeover');
+        copilotText.innerText = 'Autonomous';
+      }
+    }
+
+    async function toggleCopilotMode() {
+      const newMode = currentCopilotMode === 'AUTONOMOUS' ? 'HUMAN_TAKEOVER' : 'AUTONOMOUS';
+      updateCopilotUI(newMode);
+      try {
+        await fetch('/api/copilot/mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: newMode })
+        });
+      } catch (e) {
+        console.error('Failed to toggle copilot mode:', e);
+      }
+    }
+
+    function toggleDevTools() {
+      devtoolsDrawer.classList.toggle('open');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        toggleDevTools();
+      }
+    });
+
+    function switchDevTab(tabName) {
+      ['timeline', 'console', 'network'].forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const pane = document.getElementById('pane-' + t);
+        if (btn) btn.classList.toggle('active', t === tabName);
+        if (pane) pane.classList.toggle('active', t === tabName);
+      });
+    }
+
+    function addAuditEvent(e) {
+      auditCount++;
+      auditBadgeCounter.innerText = auditCount;
+      
+      const card = document.createElement('div');
+      card.className = 'timeline-card';
+      card.innerHTML = `
+        <div class="timeline-card-header">
+          <span class="timeline-badge ${escapeHTML(e.category)}">${escapeHTML(e.category)}</span>
+          <span class="timeline-time">${escapeHTML(e.time)}</span>
+        </div>
+        <div class="timeline-title">${escapeHTML(e.title)}</div>
+        ${e.details ? `<div class="timeline-details">${escapeHTML(e.details)}</div>` : ''}
+      `;
+      timelineList.appendChild(card);
+      timelineList.scrollTop = timelineList.scrollHeight;
+    }
+
+    function addConsoleLog(log) {
+      cCount++;
+      consoleCount.innerText = cCount;
+      const item = document.createElement('div');
+      item.className = 'console-item ' + (log.type || 'log');
+      item.innerHTML = `<span>[${escapeHTML(log.time)}]</span><span>[${escapeHTML((log.type || 'log').toUpperCase())}]</span><span>${escapeHTML(log.text)}</span>`;
+      consoleList.appendChild(item);
+      consoleList.scrollTop = consoleList.scrollHeight;
+    }
+
+    function addNetworkLog(net) {
+      nCount++;
+      networkCount.innerText = nCount;
+      const statusClass = (net.status >= 200 && net.status < 300) ? 's2xx' : 's4xx';
+      const item = document.createElement('div');
+      item.className = 'network-item';
+      item.innerHTML = `
+        <span class="net-method">${escapeHTML(net.method)}</span>
+        <span class="net-url" title="${escapeHTML(net.url)}">${escapeHTML(net.url)}</span>
+        <span class="net-status ${statusClass}">${net.status || '---'}</span>
+      `;
+      networkList.appendChild(item);
+      networkList.scrollTop = networkList.scrollHeight;
+    }
+
+    function exportAuditReport() {
+      window.open('/api/audit/export', '_blank');
+    }
+
+    function clearAuditTimeline() {
+      timelineList.innerHTML = '';
+      auditCount = 0;
+      auditBadgeCounter.innerText = '0';
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    async function hydrateAuditLogs() {
+      try {
+        const resp = await fetch('/api/audit');
+        const data = await resp.json();
+        if (data.events) data.events.forEach(addAuditEvent);
+        if (data.console) data.console.forEach(addConsoleLog);
+        if (data.network) data.network.forEach(addNetworkLog);
+        if (data.copilotMode) updateCopilotUI(data.copilotMode);
+      } catch (e) {}
+    }
+    hydrateAuditLogs();
   </script>
 </body>
 </html>

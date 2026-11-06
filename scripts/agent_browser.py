@@ -89,6 +89,11 @@ def main():
     p_think.add_argument("thought", help="Thought description in normal English")
     p_think.add_argument("--action", default="Thinking", help="Action badge (e.g. Planning, Analyzing)")
 
+    p_copilot = subparsers.add_parser("copilot", help="Get or set Co-Pilot mode")
+    p_copilot.add_argument("mode", nargs="?", choices=["autonomous", "takeover"], help="Set mode to autonomous or takeover")
+
+    subparsers.add_parser("audit", help="Fetch and print session audit execution timeline")
+
     # navigation & actions
     p_goto = subparsers.add_parser("goto", help="Navigate to a URL in active tab")
     p_goto.add_argument("url", help="Target URL")
@@ -167,6 +172,27 @@ def main():
     elif args.command == "think":
         res = request("/api/think", method="POST", data={"thought": args.thought, "action": args.action}, base_url=base_url)
         print(f"[💭] Thought broadcasted: \"{args.thought}\" ({args.action})")
+
+    elif args.command == "copilot":
+        if args.mode:
+            target_mode = "HUMAN_TAKEOVER" if args.mode == "takeover" else "AUTONOMOUS"
+            res = request("/api/copilot/mode", method="POST", data={"mode": target_mode}, base_url=base_url)
+            print(f"[✓] Co-Pilot mode set to: {res.get('mode')}")
+        else:
+            res = request("/api/status", base_url=base_url)
+            print(f"Current Co-Pilot Mode: {res.get('copilotMode', 'AUTONOMOUS')}")
+
+    elif args.command == "audit":
+        res = request("/api/audit", base_url=base_url)
+        events = res.get("events", [])
+        print(f"\n=========================================================================")
+        print(f"📋 EXECUTION AUDIT TIMELINE ({len(events)} steps)")
+        print(f"=========================================================================")
+        for e in events:
+            print(f"[{e['time']}] [{e['category']:<9}] {e['title']}")
+            if e.get("details"):
+                print(f"             └─ {e['details']}")
+        print(f"=========================================================================\n")
 
     elif args.command == "goto":
         res = request("/api/navigate", method="POST", data={"url": args.url}, base_url=base_url, timeout=40)
