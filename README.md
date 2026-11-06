@@ -21,6 +21,7 @@ Designed for AI coding assistants (Antigravity, Claude, ChatGPT, Cursor) that ne
 ## ✨ Features
 
 - **📺 Real-Time Interactive Screencast**: Streams the browser viewport with low latency via Chrome DevTools Protocol (CDP) directly onto an HTML5 canvas at `http://localhost:7654`.
+- **🛡️ Google & OAuth Secure Login (BotGuard Bypass)**: Completely removes `--enable-automation` and patches `navigator.webdriver`, `chrome.runtime`, and client plugins. Fixes Google's *"This browser or app may not be secure"* error on `accounts.google.com`.
 - **🤝 Zero-Friction Human-in-the-Loop Login**: When 2FA, CAPTCHA, or QR code authentication is required (e.g., WhatsApp Web, Google Workspace, LinkedIn), the agent halts and requests user action. You click, type, or scan on `localhost:7654`, click **"Done"**, and the agent instantly resumes.
 - **🔒 Persistent Isolated Profile**: All cookies, session states, and local storage are permanently preserved in `~/.agent-live-browser/profile`. Your primary desktop browser remains completely untouched.
 - **📑 Full Multi-Tab Multitasking**: Open multiple tabs, switch between them, or close them with a single click. External popups (such as Google OAuth) automatically appear and activate.

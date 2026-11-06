@@ -19,6 +19,77 @@ DEFAULT_PORT = 7654
 PROFILE_DIR = Path.home() / ".agent-live-browser" / "profile"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
+STEALTH_SCRIPT = """
+(() => {
+    // 1. Completely remove navigator.webdriver
+    try {
+        const newProto = navigator.__proto__;
+        delete newProto.webdriver;
+        navigator.__proto__ = newProto;
+    } catch (e) {}
+    Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined,
+        configurable: true
+    });
+
+    // 2. Realistic window.chrome mock for Google & OAuth
+    if (!window.chrome) {
+        window.chrome = {};
+    }
+    window.chrome.app = {
+        isInstalled: false,
+        InstallState: { DISABLED: 'Disabled', INSTALLED: 'Installed', NOT_INSTALLED: 'NotInstalled' },
+        RunningState: { CANNOT_RUN: 'CannotRun', READY_TO_RUN: 'ReadyToRun', RUNNING: 'Running' }
+    };
+    window.chrome.runtime = {
+        OnInstalledReason: { CHROME_UPDATE: 'chrome_update', INSTALL: 'install', SHARED_MODULE_UPDATE: 'shared_module_update', UPDATE: 'update' },
+        OnRestartRequiredReason: { APP_UPDATE: 'app_update', OS_UPDATE: 'os_update', PERIODIC: 'periodic' },
+        PlatformArch: { ARM: 'arm', ARM64: 'arm64', MIPS: 'mips', MIPS64: 'mips64', X86_32: 'x86-32', X86_64: 'x86-64' },
+        PlatformNaclArch: { ARM: 'arm', MIPS: 'mips', MIPS64: 'mips64', X86_32: 'x86-32', X86_64: 'x86-64' },
+        PlatformOs: { ANDROID: 'android', CROS: 'cros', LINUX: 'linux', MAC: 'mac', OPENBSD: 'openbsd', WIN: 'win' },
+        RequestUpdateCheckStatus: { NO_UPDATE: 'no_update', THROTTLED: 'throttled', UPDATE_AVAILABLE: 'update_available' }
+    };
+    window.chrome.csi = function() {};
+    window.chrome.loadTimes = function() {};
+
+    // 3. Plugins & MimeTypes
+    Object.defineProperty(navigator, 'plugins', {
+        get: () => {
+            const arr = [
+                { name: 'Chrome PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
+                { name: 'Chrome PDF Plugin', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: 'Portable Document Format' }
+            ];
+            arr.item = (i) => arr[i];
+            arr.namedItem = (n) => arr.find(p => p.name === n);
+            return arr;
+        },
+        configurable: true
+    });
+
+    // 4. Languages
+    Object.defineProperty(navigator, 'languages', {
+        get: () => ['en-US', 'en'],
+        configurable: true
+    });
+
+    // 5. WebGL Vendor & Renderer (bypass headless GPU fingerprinting)
+    const getParameter = WebGLRenderingContext.prototype.getParameter;
+    WebGLRenderingContext.prototype.getParameter = function(parameter) {
+        if (parameter === 37445) return 'Google Inc. (Intel)';
+        if (parameter === 37446) return 'ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+        return getParameter.apply(this, [parameter]);
+    };
+
+    // 6. Permissions query
+    const origQuery = window.navigator.permissions.query;
+    window.navigator.permissions.query = (params) => (
+        params.name === 'notifications' ?
+            Promise.resolve({ state: Notification.permission }) :
+            origQuery(params)
+    );
+})();
+"""
+
 class BrowserManager:
     def __init__(self, profile_dir=PROFILE_DIR):
         self.profile_dir = Path(profile_dir)
@@ -48,16 +119,32 @@ class BrowserManager:
         self.context = await self.playwright.chromium.launch_persistent_context(
             user_data_dir=str(self.profile_dir),
             headless=True,
+            ignore_default_args=["--enable-automation"],
             viewport={"width": 1280, "height": 800},
             device_scale_factor=1,
-            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            locale="en-US",
+            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
             args=[
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-blink-features=AutomationControlled",
-                "--disable-infobars"
+                "--disable-infobars",
+                "--disable-background-networking",
+                "--disable-default-apps",
+                "--disable-extensions",
+                "--disable-sync",
+                "--disable-translate",
+                "--metrics-recording-only",
+                "--no-first-run",
+                "--safebrowsing-disable-auto-update",
+                "--password-store=basic",
+                "--use-mock-keychain",
+                "--lang=en-US,en"
             ]
         )
+
+        # Inject stealth scripts into all frames and future pages
+        await self.context.add_init_script(STEALTH_SCRIPT)
 
         # Hook auto page open/close (e.g. popups / OAuth)
         self.context.on("page", lambda p: asyncio.create_task(self._on_new_page(p)))
