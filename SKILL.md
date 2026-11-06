@@ -31,6 +31,8 @@ python3 ~/.agents/skills/agent-live-browser/scripts/agent_browser.py <command>
 | `new-tab [url]` | Opens a new tab (defaults to google.com) |
 | `switch-tab <index>` | Switches active tab by index (0, 1, ...) |
 | `close-tab <index>` | Closes a tab by index |
+| `close-others` | Closes all extra background tabs, keeping only active tab |
+| `think "<thought>"` | Broadcasts live thinking process to the frontend HUD in plain English |
 | `goto <url>` | Navigates to target website in active tab |
 | `click <selector>` | Clicks an element by CSS selector or coordinates |
 | `click "<text>" --text` | Clicks an element matching visible text |

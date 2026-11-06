@@ -100,6 +100,7 @@ class BrowserManager:
         self.cdp = None
         self.ws_clients = set()
         self.agent_status = "Idle"
+        self.current_thought = "Agent initialized and ready for instructions."
         self.user_prompt = None
         self.user_done_event = asyncio.Event()
         self.is_running = False
@@ -268,6 +269,39 @@ class BrowserManager:
                 return True
             return False
 
+    async def close_other_tabs(self):
+        async with self._lock:
+            pages = list(self.context.pages) if self.context else []
+            if len(pages) <= 1:
+                return True
+            active = self.page
+            for p in pages:
+                if p != active:
+                    try:
+                        await p.close()
+                    except Exception:
+                        pass
+            self.active_index = 0
+            await self._setup_cdp()
+            await self.broadcast_status()
+            await self.broadcast_thought("Closed all unnecessary background tabs.", "Tabs Cleaned")
+            return True
+
+    async def broadcast_thought(self, thought, action=None):
+        self.current_thought = thought
+        if action:
+            self.agent_status = action
+        if not self.ws_clients:
+            return
+        payload = json.dumps({
+            "type": "thought",
+            "thought": thought,
+            "action": action or self.agent_status
+        })
+        coros = [ws.send_str(payload) for ws in list(self.ws_clients) if not ws.closed]
+        if coros:
+            await asyncio.gather(*coros, return_exceptions=True)
+
     async def broadcast_cursor(self, x, y, action="move"):
         if not self.ws_clients:
             return
@@ -297,6 +331,7 @@ class BrowserManager:
             "activeIndex": self.active_index,
             "tabs": tabs,
             "agentStatus": self.agent_status,
+            "currentThought": getattr(self, "current_thought", "Agent is ready."),
             "userPrompt": self.user_prompt
         })
         coros = [ws.send_str(payload) for ws in list(self.ws_clients) if not ws.closed]
@@ -417,6 +452,18 @@ async def api_close_tab(request):
     tabs = await browser_mgr.get_tabs()
     return web.json_response({"success": success, "activeIndex": browser_mgr.active_index, "tabs": tabs})
 
+async def api_close_others(request):
+    success = await browser_mgr.close_other_tabs()
+    tabs = await browser_mgr.get_tabs()
+    return web.json_response({"success": success, "activeIndex": browser_mgr.active_index, "tabs": tabs})
+
+async def api_think(request):
+    data = await request.json()
+    thought = data.get("thought", "")
+    action = data.get("action", "Thinking")
+    await browser_mgr.broadcast_thought(thought, action)
+    return web.json_response({"success": True})
+
 # --- Navigation & Control APIs ---
 
 async def api_status(request):
@@ -434,6 +481,7 @@ async def api_status(request):
         "activeIndex": browser_mgr.active_index,
         "tabs": tabs,
         "agentStatus": browser_mgr.agent_status,
+        "currentThought": browser_mgr.current_thought,
         "userPrompt": browser_mgr.user_prompt
     })
 
@@ -443,13 +491,17 @@ async def api_navigate(request):
     if not url:
         return web.json_response({"error": "Missing url"}, status=400)
     
+    await browser_mgr.broadcast_thought(f"Navigating to {url}...", "Loading Page")
     browser_mgr.agent_status = f"Navigating to {url}..."
     await browser_mgr.broadcast_status()
     
     try:
         await browser_mgr.page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        res = {"success": True, "url": browser_mgr.page.url, "title": await browser_mgr.page.title()}
+        curr_title = await browser_mgr.page.title()
+        await browser_mgr.broadcast_thought(f"Loaded page: {curr_title} ({url})", "Ready")
+        res = {"success": True, "url": browser_mgr.page.url, "title": curr_title}
     except Exception as e:
+        await browser_mgr.broadcast_thought(f"Navigation error: {str(e)}", "Error")
         res = {"success": False, "error": str(e), "url": browser_mgr.page.url}
     
     browser_mgr.agent_status = "Idle"
@@ -490,6 +542,8 @@ async def api_click(request):
     try:
         target_x = x
         target_y = y
+        target_desc = selector or text or f"coordinates ({x}, {y})"
+        
         if selector and browser_mgr.page:
             try:
                 loc = browser_mgr.page.locator(selector).first
@@ -510,9 +564,23 @@ async def api_click(request):
                 pass
 
         if target_x is not None and target_y is not None:
+            # 1. Announce thought in plain English
+            await browser_mgr.broadcast_thought(f"Sliding cursor smoothly to target {target_desc}...", "Targeting")
+            
+            # 2. Smoothly slide cursor from old position to target position
             await browser_mgr.broadcast_cursor(target_x, target_y, "move")
-            await asyncio.sleep(0.12)
-            await browser_mgr.broadcast_cursor(target_x, target_y, "click")
+            
+            # Wait 0.42s for the smooth CSS glide transition to complete the slide
+            await asyncio.sleep(0.42)
+            
+            # 3. Press down: Cursor visibly shrinks down for live click feedback!
+            await browser_mgr.broadcast_thought(f"Clicking down on {target_desc}...", "Clicking")
+            await browser_mgr.broadcast_cursor(target_x, target_y, "press")
+            await asyncio.sleep(0.18)
+            
+            # 4. Release: Cursor springs back to normal shape and ripples
+            await browser_mgr.broadcast_cursor(target_x, target_y, "release")
+            await asyncio.sleep(0.08)
 
         if selector:
             await browser_mgr.page.click(selector, timeout=5000)
@@ -522,8 +590,11 @@ async def api_click(request):
             await browser_mgr.page.mouse.click(x, y)
         else:
             return web.json_response({"error": "Provide selector, text, or (x, y)"}, status=400)
+        
+        await browser_mgr.broadcast_thought(f"Completed click on {target_desc}.", "Ready")
         return web.json_response({"success": True})
     except Exception as e:
+        await browser_mgr.broadcast_thought(f"Click failed: {str(e)}", "Error")
         return web.json_response({"success": False, "error": str(e)}, status=500)
 
 async def api_type(request):
@@ -533,6 +604,7 @@ async def api_type(request):
     press = data.get("press")
 
     try:
+        target_desc = selector or "input field"
         if selector and browser_mgr.page:
             try:
                 loc = browser_mgr.page.locator(selector).first
@@ -540,10 +612,17 @@ async def api_type(request):
                 if box:
                     tx = box["x"] + box["width"] / 2
                     ty = box["y"] + box["height"] / 2
-                    await browser_mgr.broadcast_cursor(tx, ty, "type")
-                    await asyncio.sleep(0.1)
+                    await browser_mgr.broadcast_thought(f"Sliding cursor to {target_desc}...", "Focusing Input")
+                    await browser_mgr.broadcast_cursor(tx, ty, "move")
+                    await asyncio.sleep(0.42)
+                    await browser_mgr.broadcast_cursor(tx, ty, "press")
+                    await asyncio.sleep(0.12)
+                    await browser_mgr.broadcast_cursor(tx, ty, "release")
             except Exception:
                 pass
+
+        await browser_mgr.broadcast_thought(f"Typing into {target_desc}: '{text}'...", "Typing")
+        await browser_mgr.broadcast_cursor(0, 0, "type")
 
         if selector:
             await browser_mgr.page.fill(selector, text, timeout=5000)
@@ -553,8 +632,11 @@ async def api_type(request):
             await browser_mgr.page.keyboard.type(text)
             if press:
                 await browser_mgr.page.keyboard.press(press)
+
+        await browser_mgr.broadcast_thought(f"Finished typing into {target_desc}.", "Ready")
         return web.json_response({"success": True})
     except Exception as e:
+        await browser_mgr.broadcast_thought(f"Typing failed: {str(e)}", "Error")
         return web.json_response({"success": False, "error": str(e)}, status=500)
 
 async def api_cursor(request):
@@ -666,6 +748,8 @@ async def main():
     app.router.add_post("/api/tabs/new", api_new_tab)
     app.router.add_post("/api/tabs/switch", api_switch_tab)
     app.router.add_post("/api/tabs/close", api_close_tab)
+    app.router.add_post("/api/tabs/close_others", api_close_others)
+    app.router.add_post("/api/think", api_think)
 
     # Browser Control API
     app.router.add_get("/api/status", api_status)

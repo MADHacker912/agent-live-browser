@@ -346,7 +346,12 @@
       gap: 7px;
       transform: translate(-4px, -4px);
       opacity: 0;
-      transition: opacity 0.3s ease, left 0.18s cubic-bezier(0.2, 0.8, 0.25, 1), top 0.18s cubic-bezier(0.2, 0.8, 0.25, 1);
+      /* Smooth fluid glide from old position to new position */
+      transition: 
+        left 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        top 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.25s ease;
+      will-change: left, top;
     }
     .agent-cursor.visible {
       opacity: 1;
@@ -357,12 +362,12 @@
       height: 22px;
       background: #f4efe6; /* cream clay */
       border-radius: 50% 50% 50% 3px;
-      transform: rotate(-45deg);
+      transform: rotate(-45deg) scale(1);
       box-shadow: 
         2px 5px 12px rgba(0, 0, 0, 0.45),
         inset 2px 2px 4px rgba(255, 255, 255, 0.95),
         inset -2px -2px 4px rgba(120, 110, 95, 0.35);
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
     }
 
     .clay-badge {
@@ -379,14 +384,21 @@
         inset -1.5px -1.5px 3px rgba(120, 110, 95, 0.3);
       white-space: nowrap;
       user-select: none;
+      transition: transform 0.18s ease;
     }
 
+    /* Live Click: Pointer shrinks slightly when pressing down */
+    .agent-cursor.pressing .clay-pointer,
     .agent-cursor.clicking .clay-pointer {
-      transform: rotate(-45deg) scale(0.75);
+      transform: rotate(-45deg) scale(0.78);
       box-shadow: 
         1px 2px 4px rgba(0, 0, 0, 0.35),
-        inset 3px 3px 5px rgba(100, 90, 75, 0.3),
+        inset 3px 3px 5px rgba(100, 90, 75, 0.35),
         inset -1px -1px 2px rgba(255, 255, 255, 0.6);
+    }
+    .agent-cursor.pressing .clay-badge,
+    .agent-cursor.clicking .clay-badge {
+      transform: scale(0.95);
     }
 
     .clay-ripple {
@@ -396,8 +408,8 @@
       margin-left: -22px;
       margin-top: -22px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(244, 239, 230, 0.55) 0%, rgba(244, 239, 230, 0) 70%);
-      box-shadow: 0 0 14px rgba(244, 239, 230, 0.35);
+      background: radial-gradient(circle, rgba(244, 239, 230, 0.6) 0%, rgba(244, 239, 230, 0) 70%);
+      box-shadow: 0 0 14px rgba(244, 239, 230, 0.4);
       pointer-events: none;
       animation: clayRippleAnim 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
       z-index: 55;
@@ -406,6 +418,101 @@
     @keyframes clayRippleAnim {
       0% { transform: scale(0.2); opacity: 0.95; }
       100% { transform: scale(1.7); opacity: 0; }
+    }
+
+    /* Floating Live Thinking Process HUD */
+    .thinking-hud {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 18, 20, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+      padding: 7px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(244, 239, 230, 0.1);
+      z-index: 50;
+      max-width: 85%;
+      transition: all 0.25s ease;
+      user-select: none;
+    }
+    .thinking-hud:hover {
+      border-color: var(--sand-500);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75);
+    }
+    .thinking-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cream-200);
+      box-shadow: 0 0 8px rgba(244, 239, 230, 0.6);
+      animation: warmBreathe 2.2s infinite ease-in-out;
+      flex-shrink: 0;
+    }
+    @keyframes warmBreathe {
+      0%, 100% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.25); opacity: 1; }
+    }
+    .thinking-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .thinking-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sand-500);
+    }
+    .thinking-text {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--cream-100);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 580px;
+    }
+    .thinking-badge {
+      background: var(--charcoal-800);
+      border: 1px solid var(--border-subtle);
+      color: var(--cream-300);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tab-action-pill {
+      background: transparent;
+      color: var(--sand-500);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0 10px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 8px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab-action-pill:hover {
+      background: var(--bg-surface-hover);
+      color: var(--cream-100);
+      border-color: var(--sand-500);
     }
 
     /* Bottom Status Footer */
@@ -446,6 +553,7 @@
     <div class="tabs-list" id="tabs-list">
       <!-- Tabs injected dynamically -->
     </div>
+    <button class="tab-action-pill" onclick="closeOtherTabs()" title="Close all extra tabs and keep only current">✕ Close Others</button>
   </div>
 
   <!-- Secondary Navigation & URL Bar -->
@@ -494,6 +602,16 @@
     <div id="agent-cursor" class="agent-cursor">
       <div class="clay-pointer"></div>
       <div class="clay-badge" id="agent-cursor-label">Agent</div>
+    </div>
+
+    <!-- Floating Live Thinking & Activity HUD (Front-of-the-End) -->
+    <div id="thinking-hud" class="thinking-hud">
+      <div class="thinking-pulse-dot"></div>
+      <div class="thinking-content">
+        <span class="thinking-tag">AI Agent Live Thinking</span>
+        <span class="thinking-text" id="live-thought-text">Agent is ready. Waiting for instructions...</span>
+      </div>
+      <div class="thinking-badge" id="live-action-badge">Ready</div>
     </div>
   </div>
 
@@ -693,7 +811,12 @@
             img.src = 'data:image/jpeg;base64,' + msg.data;
           } else if (msg.type === 'agent_cursor') {
             updateAgentCursor(msg.x, msg.y, msg.action);
+          } else if (msg.type === 'thought') {
+            updateThinkingHUD(msg.thought, msg.action);
           } else if (msg.type === 'status') {
+            if (msg.currentThought) {
+              updateThinkingHUD(msg.currentThought, msg.agentStatus);
+            }
             if (msg.url && msg.url !== lastUrl) {
               lastUrl = msg.url;
               if (document.activeElement !== urlInput) {
@@ -723,7 +846,31 @@
 
     const agentCursor = document.getElementById('agent-cursor');
     const agentCursorLabel = document.getElementById('agent-cursor-label');
+    const liveThoughtText = document.getElementById('live-thought-text');
+    const liveActionBadge = document.getElementById('live-action-badge');
     let cursorHideTimeout = null;
+
+    function updateThinkingHUD(thought, action) {
+      if (thought && liveThoughtText) {
+        liveThoughtText.innerText = thought;
+      }
+      if (action && liveActionBadge) {
+        liveActionBadge.innerText = action;
+      }
+      if (action && agentIndicator) {
+        agentIndicator.innerText = 'Agent: ' + action;
+      }
+    }
+
+    async function closeOtherTabs() {
+      try {
+        const resp = await fetch('/api/tabs/close_others', { method: 'POST' });
+        const data = await resp.json();
+        renderTabs(data.tabs, data.activeIndex);
+      } catch (err) {
+        console.error('Failed to close other tabs:', err);
+      }
+    }
 
     function updateAgentCursor(x, y, action) {
       if (!agentCursor) return;
@@ -733,33 +880,57 @@
       const canvasLeft = rect.left - containerRect.left;
       const canvasTop = rect.top - containerRect.top;
       
-      const screenX = canvasLeft + (x * scale);
-      const screenY = canvasTop + (y * scale);
-
-      agentCursor.style.left = screenX + 'px';
-      agentCursor.style.top = screenY + 'px';
+      if (action !== 'type' && (x > 0 || y > 0)) {
+        const screenX = canvasLeft + (x * scale);
+        const screenY = canvasTop + (y * scale);
+        // Smoothly slides from previous left/top to target left/top!
+        agentCursor.style.left = screenX + 'px';
+        agentCursor.style.top = screenY + 'px';
+      }
       agentCursor.classList.add('visible');
 
       clearTimeout(cursorHideTimeout);
       cursorHideTimeout = setTimeout(() => {
         agentCursor.classList.remove('visible');
-      }, 4000);
+      }, 5000);
 
-      if (action === 'click') {
-        agentCursor.classList.add('clicking');
+      if (action === 'press') {
+        // Live Click: Cursor shrinks down visibly
+        agentCursor.classList.add('pressing');
         agentCursorLabel.innerText = 'Clicking...';
+      } else if (action === 'release') {
+        // Spring back to normal shape & trigger ripple wave
+        agentCursor.classList.remove('pressing');
+        agentCursorLabel.innerText = 'Agent';
 
-        const ripple = document.createElement('div');
-        ripple.className = 'clay-ripple';
-        ripple.style.left = screenX + 'px';
-        ripple.style.top = screenY + 'px';
-        document.getElementById('viewport-container').appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-
+        const screenX = parseFloat(agentCursor.style.left);
+        const screenY = parseFloat(agentCursor.style.top);
+        if (!isNaN(screenX) && !isNaN(screenY)) {
+          const ripple = document.createElement('div');
+          ripple.className = 'clay-ripple';
+          ripple.style.left = screenX + 'px';
+          ripple.style.top = screenY + 'px';
+          document.getElementById('viewport-container').appendChild(ripple);
+          setTimeout(() => ripple.remove(), 600);
+        }
+      } else if (action === 'click') {
+        // Combined click: shrink down, hold, then release back to normal
+        agentCursor.classList.add('pressing');
+        agentCursorLabel.innerText = 'Clicking...';
         setTimeout(() => {
-          agentCursor.classList.remove('clicking');
+          agentCursor.classList.remove('pressing');
           agentCursorLabel.innerText = 'Agent';
-        }, 250);
+          const screenX = parseFloat(agentCursor.style.left);
+          const screenY = parseFloat(agentCursor.style.top);
+          if (!isNaN(screenX) && !isNaN(screenY)) {
+            const ripple = document.createElement('div');
+            ripple.className = 'clay-ripple';
+            ripple.style.left = screenX + 'px';
+            ripple.style.top = screenY + 'px';
+            document.getElementById('viewport-container').appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+          }
+        }, 180);
       } else if (action === 'type') {
         agentCursorLabel.innerText = 'Typing...';
       } else {

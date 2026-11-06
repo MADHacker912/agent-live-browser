@@ -83,6 +83,12 @@ def main():
     p_close_tab = subparsers.add_parser("close-tab", help="Close tab by index")
     p_close_tab.add_argument("index", type=int, help="Tab index")
 
+    subparsers.add_parser("close-others", help="Close all other tabs except the active tab")
+
+    p_think = subparsers.add_parser("think", help="Broadcast an agent thinking process to the UI in plain English")
+    p_think.add_argument("thought", help="Thought description in normal English")
+    p_think.add_argument("--action", default="Thinking", help="Action badge (e.g. Planning, Analyzing)")
+
     # navigation & actions
     p_goto = subparsers.add_parser("goto", help="Navigate to a URL in active tab")
     p_goto.add_argument("url", help="Target URL")
@@ -153,6 +159,14 @@ def main():
     elif args.command == "close-tab":
         res = request("/api/tabs/close", method="POST", data={"index": args.index}, base_url=base_url)
         print(f"[✓] Closed tab [{args.index}], active is now [{res.get('activeIndex')}]")
+
+    elif args.command == "close-others":
+        res = request("/api/tabs/close_others", method="POST", base_url=base_url)
+        print(f"[✓] Closed all extra tabs. Only active tab [{res.get('activeIndex')}] remains.")
+
+    elif args.command == "think":
+        res = request("/api/think", method="POST", data={"thought": args.thought, "action": args.action}, base_url=base_url)
+        print(f"[💭] Thought broadcasted: \"{args.thought}\" ({args.action})")
 
     elif args.command == "goto":
         res = request("/api/navigate", method="POST", data={"url": args.url}, base_url=base_url, timeout=40)
