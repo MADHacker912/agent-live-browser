@@ -3,150 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent Workspace | Virtual Browser (7654)</title>
+  <title>Agent Workspace — Virtual Browser</title>
   <style>
+    /* -------------------------------------------------------------
+       Apple macOS & VisionOS Design Tokens (Black & Cream Studio)
+       ------------------------------------------------------------- */
     :root {
-      --bg-canvas: #09090b;
-      --bg-chrome: #121214;
-      --bg-surface: #18181c;
-      --bg-surface-hover: #222227;
-      --border-subtle: #27272c;
-      --border-hover: #3e3e46;
-      --border-cream: #d6cfc2;
+      --bg-base: #000000;
+      --bg-chrome: rgba(18, 18, 22, 0.82);
+      --bg-chrome-solid: #121216;
+      --bg-surface: rgba(28, 28, 34, 0.65);
+      --bg-surface-hover: rgba(42, 42, 50, 0.75);
+      --bg-surface-active: rgba(55, 55, 65, 0.85);
+      --bg-input: rgba(14, 14, 18, 0.75);
       
-      --cream-100: #fbf9f5;
-      --cream-200: #f4efe6;
-      --cream-300: #e8e1d3;
-      --cream-400: #d4cbb8;
-      --sand-500: #9e9686;
-      --sand-600: #706a5e;
-      --charcoal-900: #101012;
-      --charcoal-800: #1a1a1e;
+      --border-hairline: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.12);
+      --border-highlight: rgba(255, 255, 255, 0.22);
+      --border-focus: rgba(244, 239, 230, 0.45);
+      
+      --cream-100: #ffffff;
+      --cream-200: #f5f2eb;
+      --cream-300: #e5dfd3;
+      --cream-400: #cec3b0;
+      --sand-500: #9c9485;
+      --sand-600: #6d665a;
+      
+      --apple-blue: #2997ff;
+      --apple-green: #30d158;
+      --apple-amber: #ff9f0a;
+      --apple-red: #ff453a;
+
+      --spring-ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --spring-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --spring-duration: 0.28s;
+
+      --glass-blur: blur(32px) saturate(190%);
+      --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+      --specular-border: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 100%);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+
     body {
-      background: var(--bg-canvas);
+      background: var(--bg-base);
       color: var(--cream-200);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       user-select: none;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing: -0.012em;
     }
 
-    /* Topmost Tab Bar */
-    .tab-bar-container {
+    /* -------------------------------------------------------------
+       macOS Unified Window Header & Tab Bar
+       ------------------------------------------------------------- */
+    .window-header {
       background: var(--bg-chrome);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 6px 12px 6px 12px;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 30;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Top Row: Traffic Lights + Tabs + Window Actions */
+    .tab-bar-container {
       display: flex;
       align-items: center;
+      padding: 8px 14px 6px 14px;
+      gap: 12px;
       overflow-x: auto;
       scrollbar-width: none;
     }
     .tab-bar-container::-webkit-scrollbar { display: none; }
 
+    /* macOS Traffic Light Window Controls */
+    .traffic-lights {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding-right: 6px;
+      flex-shrink: 0;
+    }
+    .traffic-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      transition: transform var(--spring-duration) var(--spring-ease), filter 0.15s;
+    }
+    .traffic-dot:hover {
+      transform: scale(1.08);
+      filter: brightness(1.15);
+    }
+    .traffic-dot:active {
+      transform: scale(0.92);
+    }
+    .traffic-close { background: #ff5f56; border: 0.5px solid #e0443e; }
+    .traffic-min { background: #ffbd2e; border: 0.5px solid #dea123; }
+    .traffic-max { background: #27c93f; border: 0.5px solid #1aab29; }
+
+    /* Floating Tab Pills */
     .tabs-list {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       flex: 1;
     }
 
     .tab-item {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--charcoal-800);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--sand-500);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 0 12px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 0 10px 0 12px;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       max-width: 190px;
       min-width: 110px;
       height: 30px;
-      transition: background 0.15s, color 0.15s;
+      position: relative;
+      transition: 
+        background var(--spring-duration) var(--spring-ease),
+        color var(--spring-duration) var(--spring-ease),
+        border-color var(--spring-duration) var(--spring-ease),
+        transform 0.18s var(--spring-ease),
+        box-shadow var(--spring-duration) var(--spring-ease);
+      animation: appleTabIn 0.28s var(--spring-ease) forwards;
     }
+
+    @keyframes appleTabIn {
+      0% { opacity: 0; transform: scale(0.92) translateY(-2px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
     .tab-item:hover {
-      background: var(--bg-surface-hover);
+      background: rgba(255, 255, 255, 0.08);
       color: var(--cream-200);
+      border-color: var(--border-subtle);
+      transform: translateY(-0.5px);
     }
+
+    .tab-item:active {
+      transform: scale(0.98);
+    }
+
     .tab-item.active {
-      background: var(--cream-200);
-      color: var(--charcoal-900);
+      background: rgba(244, 239, 230, 0.16);
+      color: var(--cream-100);
       font-weight: 600;
-      border-color: var(--cream-200);
+      border-color: rgba(244, 239, 230, 0.35);
+      box-shadow: 
+        0 4px 14px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
+
+    .tab-favicon {
+      width: 13px;
+      height: 13px;
+      opacity: 0.6;
+      border-radius: 2px;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    .tab-item.active .tab-favicon { opacity: 1; }
+
     .tab-title {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       flex: 1;
     }
+
     .tab-close {
-      opacity: 0.6;
-      font-size: 11px;
-      padding: 2px 4px;
-      border-radius: 3px;
-      display: flex;
+      opacity: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.15s, background 0.15s;
+      font-size: 10px;
+      color: var(--sand-500);
+      transition: opacity 0.15s, background 0.15s, color 0.15s, transform 0.12s;
+      flex-shrink: 0;
+    }
+    .tab-item:hover .tab-close,
+    .tab-item.active .tab-close {
+      opacity: 0.7;
     }
     .tab-close:hover {
-      opacity: 1;
-      background: rgba(0, 0, 0, 0.15);
+      opacity: 1 !important;
+      background: rgba(255, 255, 255, 0.18);
+      color: var(--cream-100);
+      transform: scale(1.1);
     }
-    .tab-item:not(.active) .tab-close:hover {
-      background: rgba(255, 255, 255, 0.15);
+    .tab-close:active {
+      transform: scale(0.9);
     }
 
     .tab-add-after-btn {
-      background: var(--charcoal-800);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--sand-500);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      width: 26px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      width: 28px;
       height: 30px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 0;
-      margin: 0;
-      transition: all 0.15s ease;
+      font-size: 15px;
+      font-weight: 400;
+      transition: 
+        background var(--spring-duration) var(--spring-ease),
+        color var(--spring-duration) var(--spring-ease),
+        border-color var(--spring-duration) var(--spring-ease),
+        transform 0.16s var(--spring-ease);
       flex-shrink: 0;
     }
     .tab-add-after-btn:hover {
-      background: var(--bg-surface-hover);
+      background: rgba(255, 255, 255, 0.1);
       color: var(--cream-100);
-      border-color: var(--cream-400);
+      border-color: var(--border-subtle);
+      transform: scale(1.05);
+    }
+    .tab-add-after-btn:active {
+      transform: scale(0.92);
     }
 
-    /* Secondary Nav Bar */
+    .tab-action-pill {
+      background: transparent;
+      color: var(--sand-500);
+      border: 1px solid var(--border-hairline);
+      border-radius: 7px;
+      padding: 0 10px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all var(--spring-duration) var(--spring-ease);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tab-action-pill:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--cream-200);
+      border-color: var(--border-subtle);
+    }
+    .tab-action-pill:active { transform: scale(0.96); }
+
+    /* -------------------------------------------------------------
+       macOS Safari Omnibar Toolbar
+       ------------------------------------------------------------- */
     .nav-toolbar {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 8px 14px;
+      padding: 6px 14px 10px 14px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
+    .nav-nav-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     .icon-btn {
-      background: var(--charcoal-900);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--cream-300);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 7px;
       width: 32px;
       height: 32px;
       display: inline-flex;
@@ -154,37 +297,57 @@
       justify-content: center;
       cursor: pointer;
       font-size: 13px;
-      transition: all 0.15s ease;
+      transition: 
+        background var(--spring-duration) var(--spring-ease),
+        border-color var(--spring-duration) var(--spring-ease),
+        color var(--spring-duration) var(--spring-ease),
+        transform 0.14s var(--spring-ease);
     }
     .icon-btn:hover {
-      background: var(--bg-surface-hover);
-      border-color: var(--border-hover);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-subtle);
       color: var(--cream-100);
     }
-    .icon-btn:active { transform: scale(0.96); }
+    .icon-btn:active {
+      transform: scale(0.92);
+    }
 
+    /* Safari-style Centered Smart Omnibar */
     .url-container {
       flex: 1;
       display: flex;
       align-items: center;
-      background: var(--charcoal-900);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 2px 10px;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--bg-input);
+      border: 1px solid var(--border-hairline);
+      border-radius: 9px;
+      padding: 0 12px;
+      height: 34px;
+      position: relative;
+      transition: 
+        border-color var(--spring-duration) var(--spring-ease),
+        box-shadow var(--spring-duration) var(--spring-ease),
+        background var(--spring-duration) var(--spring-ease);
     }
     .url-container:focus-within {
-      border-color: var(--cream-400);
-      box-shadow: 0 0 0 2px rgba(214, 207, 194, 0.15);
+      background: rgba(20, 20, 26, 0.95);
+      border-color: var(--border-focus);
+      box-shadow: 
+        0 0 0 3px rgba(244, 239, 230, 0.12),
+        0 4px 18px rgba(0, 0, 0, 0.5);
     }
-    .url-badge {
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+
+    .url-lock-icon {
+      font-size: 11px;
       color: var(--sand-500);
-      margin-right: 10px;
-      font-weight: 600;
+      margin-right: 8px;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.2s;
     }
+    .url-container:focus-within .url-lock-icon {
+      color: var(--apple-green);
+    }
+
     #url-input {
       flex: 1;
       background: transparent;
@@ -192,136 +355,280 @@
       outline: none;
       color: var(--cream-100);
       font-size: 13px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      padding: 6px 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      padding: 0;
+      letter-spacing: -0.01em;
+    }
+    #url-input::placeholder {
+      color: var(--sand-600);
+    }
+
+    .url-shortcut-hint {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--sand-600);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
     }
 
     .btn-go {
       background: var(--cream-200);
-      color: var(--charcoal-900);
-      border: 1px solid var(--cream-300);
-      border-radius: 6px;
-      padding: 6px 14px;
+      color: #0d0d0f;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
+      padding: 0 14px;
+      height: 32px;
       font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.02em;
       cursor: pointer;
-      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: 
+        background var(--spring-duration) var(--spring-ease),
+        transform 0.14s var(--spring-ease),
+        box-shadow var(--spring-duration) var(--spring-ease);
     }
     .btn-go:hover {
-      background: var(--cream-100);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      background: #ffffff;
+      box-shadow: 0 3px 12px rgba(244, 239, 230, 0.25);
+    }
+    .btn-go:active {
+      transform: scale(0.94);
     }
 
+    /* -------------------------------------------------------------
+       Apple Segmented Sliding Control for Co-Pilot Mode
+       ------------------------------------------------------------- */
+    .apple-segmented-control {
+      position: relative;
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-hairline);
+      border-radius: 9999px;
+      padding: 2.5px;
+      user-select: none;
+      cursor: pointer;
+      height: 32px;
+      box-sizing: border-box;
+    }
+
+    .segmented-pill {
+      position: absolute;
+      top: 2.5px;
+      left: 2.5px;
+      height: calc(100% - 5px);
+      width: calc(50% - 2.5px);
+      background: rgba(244, 239, 230, 0.95);
+      border-radius: 9999px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      transition: transform 0.32s var(--spring-ease), background 0.32s var(--spring-ease);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .apple-segmented-control.takeover-active .segmented-pill {
+      transform: translateX(100%);
+      background: #fde047;
+    }
+
+    .segmented-option {
+      position: relative;
+      z-index: 2;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sand-500);
+      transition: color 0.24s var(--spring-ease);
+      cursor: pointer;
+      height: 100%;
+    }
+    .apple-segmented-control:not(.takeover-active) .segmented-option.opt-autonomous {
+      color: #0c0c0e;
+    }
+    .apple-segmented-control.takeover-active .segmented-option.opt-takeover {
+      color: #1a1608;
+    }
+
+    .status-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .opt-autonomous .status-indicator-dot {
+      animation: appleBreathe 2.4s infinite ease-in-out;
+    }
+    @keyframes appleBreathe {
+      0%, 100% { opacity: 0.5; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* DevTools Toggle Button */
+    .devtools-btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--cream-300);
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 0 12px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 
+        background var(--spring-duration) var(--spring-ease),
+        border-color var(--spring-duration) var(--spring-ease),
+        transform 0.14s var(--spring-ease);
+    }
+    .devtools-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--border-subtle);
+      color: var(--cream-100);
+    }
+    .devtools-btn:active { transform: scale(0.94); }
+    .devtools-counter {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--cream-100);
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Live Studio Indicator */
     .connection-status {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      background: rgba(234, 228, 216, 0.06);
-      border: 1px solid var(--border-subtle);
+      font-weight: 500;
+      padding: 0 10px;
+      height: 28px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-hairline);
       color: var(--cream-300);
-      letter-spacing: 0.03em;
     }
     .status-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--cream-300);
-      opacity: 0.8;
-    }
-    .connection-status.live .status-dot {
-      animation: warmPulse 2s infinite ease-in-out;
-    }
-    @keyframes warmPulse {
-      0% { opacity: 0.4; }
-      50% { opacity: 1; }
-      100% { opacity: 0.4; }
-    }
-    .connection-status.offline {
-      border-color: #5c3838;
-      color: #d19a9a;
+      background: var(--apple-green);
+      box-shadow: 0 0 8px rgba(48, 209, 88, 0.6);
     }
     .connection-status.offline .status-dot {
-      background: #c95d5d;
-      animation: none;
+      background: var(--apple-red);
+      box-shadow: 0 0 8px rgba(255, 69, 58, 0.6);
     }
 
-    /* Quick Shortcuts Bar */
+    /* -------------------------------------------------------------
+       Apple Safari Favorites / Shortcuts Row
+       ------------------------------------------------------------- */
     .shortcuts-bar {
-      background: var(--bg-chrome);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 5px 14px;
+      background: rgba(14, 14, 18, 0.6);
+      border-bottom: 1px solid var(--border-hairline);
+      padding: 6px 14px;
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 11px;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .shortcuts-bar::-webkit-scrollbar { display: none; }
     .shortcuts-label {
       color: var(--sand-600);
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       margin-right: 4px;
     }
     .shortcut-pill {
-      background: var(--bg-surface);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--cream-300);
-      border: 1px solid var(--border-subtle);
-      padding: 3px 9px;
-      border-radius: 4px;
+      border: 1px solid var(--border-hairline);
+      padding: 4px 10px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 11px;
+      font-weight: 500;
       text-decoration: none;
-      transition: all 0.15s ease;
+      transition: 
+        background var(--spring-duration) var(--spring-ease),
+        border-color var(--spring-duration) var(--spring-ease),
+        color var(--spring-duration) var(--spring-ease),
+        transform 0.12s var(--spring-ease);
+      white-space: nowrap;
     }
     .shortcut-pill:hover {
-      background: var(--bg-surface-hover);
+      background: rgba(255, 255, 255, 0.09);
       color: var(--cream-100);
-      border-color: var(--border-hover);
+      border-color: var(--border-subtle);
+      transform: translateY(-0.5px);
     }
+    .shortcut-pill:active { transform: scale(0.95); }
 
-    /* Notification Banner */
+    /* -------------------------------------------------------------
+       macOS Notification Banner (Logins & 2FA Handoff)
+       ------------------------------------------------------------- */
     #user-prompt-banner {
       display: none;
-      background: #241c14;
-      border-bottom: 1px solid #4a3828;
+      background: rgba(40, 28, 16, 0.94);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid rgba(234, 179, 8, 0.35);
       color: var(--cream-100);
       padding: 10px 18px;
       align-items: center;
       justify-content: space-between;
       font-size: 13px;
       z-index: 40;
+      animation: bannerSlideDown 0.35s var(--spring-ease) forwards;
+    }
+    @keyframes bannerSlideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
     #user-prompt-banner.active { display: flex; }
-    .banner-left { display: flex; align-items: center; gap: 10px; }
+    .banner-left { display: flex; align-items: center; gap: 10px; font-weight: 500; }
     .banner-dot {
       width: 8px;
       height: 8px;
-      background: #eab308;
+      background: var(--apple-amber);
       border-radius: 50%;
+      box-shadow: 0 0 10px rgba(255, 159, 10, 0.7);
+      animation: appleBreathe 1.8s infinite ease-in-out;
     }
     .banner-btn {
       background: var(--cream-200);
-      color: var(--charcoal-900);
-      border: 1px solid var(--cream-300);
-      border-radius: 6px;
+      color: #121214;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
       padding: 6px 14px;
       font-weight: 600;
       cursor: pointer;
       font-size: 12px;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.12s;
     }
-    .banner-btn:hover { background: var(--cream-100); }
+    .banner-btn:hover { background: #ffffff; }
+    .banner-btn:active { transform: scale(0.95); }
 
-    /* Viewport / Screen Area */
+    /* -------------------------------------------------------------
+       Viewport Stage & Canvas (macOS Bezel Look)
+       ------------------------------------------------------------- */
     #viewport-container {
       flex: 1;
       position: relative;
-      background: var(--bg-canvas);
+      background: radial-gradient(circle at 50% 20%, #15151b 0%, #060608 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -330,13 +637,24 @@
     }
     #screen-canvas {
       display: block;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+      box-shadow: 
+        0 24px 70px rgba(0, 0, 0, 0.8),
+        0 4px 16px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
       outline: none;
       background: #ffffff;
-      border-radius: 2px;
+      border-radius: 8px;
+      transition: box-shadow 0.3s var(--spring-ease);
+    }
+    #screen-canvas:focus {
+      box-shadow: 
+        0 24px 80px rgba(0, 0, 0, 0.9),
+        0 0 0 2px rgba(244, 239, 230, 0.35);
     }
 
-    /* Claymorphism Agent Cursor */
+    /* -------------------------------------------------------------
+       Apple VisionOS Spatial Clay Cursor (Fluid Glide + Tactile Press)
+       ------------------------------------------------------------- */
     .agent-cursor {
       position: absolute;
       pointer-events: none;
@@ -346,117 +664,147 @@
       gap: 7px;
       transform: translate(-4px, -4px);
       opacity: 0;
-      /* Smooth fluid glide from old position to new position */
+      /* Signature Apple spring fluid glide from old position to new */
       transition: 
-        left 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-        top 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.25s ease;
+        left 0.42s var(--spring-ease),
+        top 0.42s var(--spring-ease),
+        opacity 0.28s var(--spring-ease);
       will-change: left, top;
     }
-    .agent-cursor.visible {
-      opacity: 1;
-    }
+    .agent-cursor.visible { opacity: 1; }
 
     .clay-pointer {
       width: 22px;
       height: 22px;
-      background: #f4efe6; /* cream clay */
+      background: #f5f0e6;
       border-radius: 50% 50% 50% 3px;
       transform: rotate(-45deg) scale(1);
       box-shadow: 
-        2px 5px 12px rgba(0, 0, 0, 0.45),
+        0 4px 14px rgba(0, 0, 0, 0.5),
         inset 2px 2px 4px rgba(255, 255, 255, 0.95),
         inset -2px -2px 4px rgba(120, 110, 95, 0.35);
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+      transition: 
+        transform 0.18s var(--spring-snap),
+        box-shadow 0.18s var(--spring-ease);
     }
 
     .clay-badge {
-      background: #f4efe6;
-      color: #1a1917;
+      background: rgba(245, 240, 230, 0.95);
+      color: #151412;
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0.05em;
-      padding: 3px 8px;
-      border-radius: 10px;
+      letter-spacing: 0.02em;
+      padding: 3px 9px;
+      border-radius: 12px;
       box-shadow: 
-        2px 3px 8px rgba(0, 0, 0, 0.3),
-        inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.9),
-        inset -1.5px -1.5px 3px rgba(120, 110, 95, 0.3);
+        0 4px 12px rgba(0, 0, 0, 0.35),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.9);
       white-space: nowrap;
       user-select: none;
-      transition: transform 0.18s ease;
+      transition: transform 0.18s var(--spring-ease);
     }
 
-    /* Live Click: Pointer shrinks slightly when pressing down */
+    /* Tactile Click Physics: Shrink on Press */
     .agent-cursor.pressing .clay-pointer,
     .agent-cursor.clicking .clay-pointer {
       transform: rotate(-45deg) scale(0.78);
       box-shadow: 
-        1px 2px 4px rgba(0, 0, 0, 0.35),
-        inset 3px 3px 5px rgba(100, 90, 75, 0.35),
+        0 2px 6px rgba(0, 0, 0, 0.4),
+        inset 3px 3px 6px rgba(100, 90, 75, 0.4),
         inset -1px -1px 2px rgba(255, 255, 255, 0.6);
     }
     .agent-cursor.pressing .clay-badge,
     .agent-cursor.clicking .clay-badge {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
 
     .clay-ripple {
       position: absolute;
-      width: 44px;
-      height: 44px;
-      margin-left: -22px;
-      margin-top: -22px;
+      width: 48px;
+      height: 48px;
+      margin-left: -24px;
+      margin-top: -24px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(244, 239, 230, 0.6) 0%, rgba(244, 239, 230, 0) 70%);
-      box-shadow: 0 0 14px rgba(244, 239, 230, 0.4);
+      background: radial-gradient(circle, rgba(245, 240, 230, 0.65) 0%, rgba(245, 240, 230, 0) 70%);
+      box-shadow: 0 0 18px rgba(245, 240, 230, 0.4);
       pointer-events: none;
-      animation: clayRippleAnim 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      animation: appleRippleAnim 0.55s var(--spring-ease) forwards;
       z-index: 55;
     }
-
-    @keyframes clayRippleAnim {
+    @keyframes appleRippleAnim {
       0% { transform: scale(0.2); opacity: 0.95; }
-      100% { transform: scale(1.7); opacity: 0; }
+      100% { transform: scale(1.85); opacity: 0; }
     }
 
-    /* Floating Live Thinking Process HUD */
+    /* -------------------------------------------------------------
+       Apple Dynamic Island Style Live Thinking Process HUD
+       ------------------------------------------------------------- */
     .thinking-hud {
       position: absolute;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
-      transform: translateX(-50%);
-      background: rgba(18, 18, 20, 0.92);
-      backdrop-filter: blur(14px);
+      transform: translateX(-50%) translateY(0);
+      background: rgba(18, 18, 24, 0.78);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid var(--border-subtle);
-      border-radius: 30px;
-      padding: 7px 18px;
+      border-radius: 9999px;
+      padding: 8px 20px 8px 14px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(244, 239, 230, 0.1);
+      gap: 14px;
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
       z-index: 50;
-      max-width: 85%;
-      transition: all 0.25s ease;
+      max-width: 80%;
+      transition: 
+        transform 0.32s var(--spring-ease),
+        box-shadow 0.32s var(--spring-ease),
+        border-color 0.32s var(--spring-ease),
+        background 0.32s var(--spring-ease);
       user-select: none;
     }
     .thinking-hud:hover {
-      border-color: var(--sand-500);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75);
+      transform: translateX(-50%) translateY(-2px);
+      border-color: var(--border-highlight);
+      box-shadow: 
+        0 26px 60px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
-    .thinking-pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--cream-200);
-      box-shadow: 0 0 8px rgba(244, 239, 230, 0.6);
-      animation: warmBreathe 2.2s infinite ease-in-out;
+
+    /* Apple Intelligence Glow Ring */
+    .thinking-pulse-wrap {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
-    @keyframes warmBreathe {
-      0%, 100% { transform: scale(0.9); opacity: 0.6; }
-      50% { transform: scale(1.25); opacity: 1; }
+    .thinking-pulse-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 180deg at 50% 50%, #f4efe6 0deg, #d6cfc2 120deg, #9e9686 240deg, #f4efe6 360deg);
+      filter: blur(4px);
+      opacity: 0.7;
+      animation: appleSiriSpin 4s linear infinite;
     }
+    @keyframes appleSiriSpin {
+      100% { transform: rotate(360deg); }
+    }
+    .thinking-pulse-core {
+      position: relative;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--cream-100);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+      animation: appleBreathe 2.2s infinite ease-in-out;
+    }
+
     .thinking-content {
       display: flex;
       flex-direction: column;
@@ -471,17 +819,18 @@
       color: var(--sand-500);
     }
     .thinking-text {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 500;
       color: var(--cream-100);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 580px;
+      max-width: 540px;
+      transition: color 0.2s;
     }
     .thinking-badge {
-      background: var(--charcoal-800);
-      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-hairline);
       color: var(--cream-300);
       font-size: 10px;
       font-weight: 600;
@@ -491,149 +840,67 @@
       flex-shrink: 0;
     }
 
-    .tab-action-pill {
-      background: transparent;
-      color: var(--sand-500);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 0 10px;
-      height: 30px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 500;
-      margin-left: 8px;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .tab-action-pill:hover {
-      background: var(--bg-surface-hover);
-      color: var(--cream-100);
-      border-color: var(--sand-500);
-    }
-
-    /* Co-Pilot Mode Toggle */
-    .copilot-toggle-container {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      background: var(--charcoal-900);
-      border: 1px solid var(--border-subtle);
-      color: var(--cream-200);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.15s ease;
-    }
-    .copilot-toggle-container:hover {
-      border-color: var(--sand-500);
-      background: var(--bg-surface-hover);
-    }
-    .copilot-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #4ade80;
-      box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
-    }
-    .copilot-toggle-container.takeover {
-      background: #271c14;
-      border-color: #5c3f2b;
-      color: #fef08a;
-    }
-    .copilot-toggle-container.takeover .copilot-dot {
-      background: #eab308;
-      box-shadow: 0 0 6px rgba(234, 179, 8, 0.5);
-    }
-
-    /* DevTools Toggle Button */
-    .devtools-btn {
-      background: var(--charcoal-900);
-      color: var(--cream-300);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 5px 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .devtools-btn:hover {
-      background: var(--bg-surface-hover);
-      color: var(--cream-100);
-      border-color: var(--border-hover);
-    }
-    .devtools-counter {
-      background: var(--charcoal-800);
-      color: var(--cream-200);
-      border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 1px 6px;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    /* DevTools & Observability Drawer */
+    /* -------------------------------------------------------------
+       macOS Inspector Drawer (DevTools & Audit Timeline)
+       ------------------------------------------------------------- */
     .devtools-drawer {
       position: absolute;
       right: 0;
       top: 0;
       bottom: 0;
-      width: 410px;
-      background: rgba(18, 18, 20, 0.96);
-      backdrop-filter: blur(16px);
+      width: 420px;
+      background: rgba(18, 18, 22, 0.88);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border-left: 1px solid var(--border-subtle);
-      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+      box-shadow: -16px 0 45px rgba(0, 0, 0, 0.7);
       z-index: 70;
       display: flex;
       flex-direction: column;
       transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.25, 1);
+      transition: transform 0.35s var(--spring-ease);
     }
     .devtools-drawer.open {
       transform: translateX(0);
     }
 
     .drawer-header {
-      background: var(--bg-chrome);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-hairline);
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
     }
-    .drawer-tabs {
-      display: flex;
-      gap: 4px;
+
+    /* Drawer Segmented Tab Switcher */
+    .drawer-segmented {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
     }
     .drawer-tab-btn {
       background: transparent;
       color: var(--sand-500);
-      border: 1px solid transparent;
-      border-radius: 5px;
+      border: none;
+      border-radius: 6px;
       padding: 4px 10px;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all var(--spring-duration) var(--spring-ease);
     }
     .drawer-tab-btn:hover {
       color: var(--cream-200);
-      background: var(--charcoal-800);
     }
     .drawer-tab-btn.active {
-      color: var(--charcoal-900);
+      color: #0c0c0e;
       background: var(--cream-200);
-      border-color: var(--cream-200);
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
     }
 
     .drawer-actions {
@@ -641,21 +908,22 @@
       gap: 6px;
     }
     .drawer-action-btn {
-      background: var(--charcoal-900);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--cream-300);
-      border: 1px solid var(--border-subtle);
-      border-radius: 5px;
-      padding: 4px 8px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 6px;
+      padding: 4px 9px;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all var(--spring-duration) var(--spring-ease);
     }
     .drawer-action-btn:hover {
-      background: var(--bg-surface-hover);
+      background: rgba(255, 255, 255, 0.1);
       color: var(--cream-100);
-      border-color: var(--border-hover);
+      border-color: var(--border-subtle);
     }
+    .drawer-action-btn:active { transform: scale(0.92); }
 
     .drawer-pane {
       flex: 1;
@@ -665,10 +933,16 @@
     }
     .drawer-pane.active {
       display: flex;
+      animation: fadeIn 0.2s var(--spring-ease);
     }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     .pane-header-info {
       padding: 8px 14px;
-      border-bottom: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-hairline);
       font-size: 10px;
       letter-spacing: 0.08em;
       font-weight: 700;
@@ -682,14 +956,16 @@
       border: none;
       color: var(--sand-500);
       font-size: 10px;
+      font-weight: 600;
       cursor: pointer;
+      transition: color 0.15s;
     }
     .text-link-btn:hover { color: var(--cream-100); }
 
     .timeline-list, .console-list, .network-list {
       flex: 1;
       overflow-y: auto;
-      padding: 10px 14px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -697,17 +973,27 @@
 
     /* Timeline Step Card */
     .timeline-card {
-      background: var(--charcoal-900);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 5px;
-      transition: border-color 0.15s;
+      transition: 
+        border-color var(--spring-duration) var(--spring-ease),
+        background var(--spring-duration) var(--spring-ease),
+        transform 0.18s var(--spring-ease);
+      animation: cardSlideIn 0.25s var(--spring-ease) forwards;
+    }
+    @keyframes cardSlideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .timeline-card:hover {
-      border-color: var(--border-hover);
+      border-color: var(--border-subtle);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-1px);
     }
     .timeline-card-header {
       display: flex;
@@ -718,10 +1004,10 @@
       font-size: 9px;
       font-weight: 700;
       letter-spacing: 0.06em;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 4px;
-      background: var(--charcoal-800);
-      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-hairline);
       color: var(--cream-300);
     }
     .timeline-badge.NAVIGATE { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
@@ -732,7 +1018,7 @@
 
     .timeline-time {
       font-size: 10px;
-      font-family: ui-monospace, monospace;
+      font-family: -apple-system, BlinkMacSystemFont, ui-monospace, SFMono-Regular, monospace;
       color: var(--sand-600);
     }
     .timeline-title {
@@ -744,18 +1030,18 @@
     .timeline-details {
       font-size: 11px;
       color: var(--sand-500);
-      font-family: ui-monospace, monospace;
+      font-family: ui-monospace, SFMono-Regular, monospace;
       word-break: break-all;
     }
 
     /* Console & Network items */
     .console-item {
-      font-family: ui-monospace, monospace;
+      font-family: ui-monospace, SFMono-Regular, monospace;
       font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background: var(--charcoal-900);
-      border: 1px solid var(--border-subtle);
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-hairline);
       display: flex;
       gap: 8px;
     }
@@ -764,12 +1050,12 @@
     .console-item.log { color: var(--cream-300); }
 
     .network-item {
-      font-family: ui-monospace, monospace;
+      font-family: ui-monospace, SFMono-Regular, monospace;
       font-size: 11px;
       padding: 6px 10px;
-      border-radius: 4px;
-      background: var(--charcoal-900);
-      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-hairline);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -777,25 +1063,30 @@
     }
     .net-method { font-weight: 700; color: var(--cream-200); }
     .net-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sand-500); }
-    .net-status { font-weight: 700; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+    .net-status { font-weight: 700; padding: 1px 5px; border-radius: 4px; font-size: 10px; }
     .net-status.s2xx { color: #4ade80; }
     .net-status.s4xx, .net-status.s5xx { color: #f87171; }
 
-    /* Bottom Status Footer */
+    /* -------------------------------------------------------------
+       macOS Status Footer
+       ------------------------------------------------------------- */
     footer {
       background: var(--bg-chrome);
-      border-top: 1px solid var(--border-subtle);
-      padding: 6px 14px;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-hairline);
+      padding: 6px 16px;
       font-size: 11px;
       color: var(--sand-500);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      z-index: 20;
     }
     .footer-left { display: flex; gap: 16px; align-items: center; }
     .footer-right { display: flex; gap: 16px; align-items: center; }
     .profile-pill {
-      font-family: ui-monospace, monospace;
+      font-family: ui-monospace, SFMono-Regular, monospace;
       color: var(--cream-300);
     }
     .toggle-wrap {
@@ -805,7 +1096,10 @@
       cursor: pointer;
       user-select: none;
     }
-    .toggle-wrap input { accent-color: var(--cream-300); cursor: pointer; }
+    .toggle-wrap input {
+      accent-color: var(--cream-200);
+      cursor: pointer;
+    }
     #agent-indicator {
       font-weight: 500;
       color: var(--cream-200);
@@ -814,56 +1108,78 @@
 </head>
 <body>
 
-  <!-- Tab Bar (Multi-tasking & switching) -->
-  <div class="tab-bar-container">
-    <div class="tabs-list" id="tabs-list">
-      <!-- Tabs injected dynamically -->
+  <!-- macOS Window Header & Safari-style Chrome -->
+  <div class="window-header">
+    <!-- Top Row: Traffic Lights + Tabs + Quick Tab Actions -->
+    <div class="tab-bar-container">
+      <div class="traffic-lights">
+        <div class="traffic-dot traffic-close" onclick="closeOtherTabs()" title="Close Other Tabs"></div>
+        <div class="traffic-dot traffic-min" onclick="toggleDevTools()" title="Toggle DevTools"></div>
+        <div class="traffic-dot traffic-max" onclick="newTab()" title="New Tab"></div>
+      </div>
+
+      <div class="tabs-list" id="tabs-list">
+        <!-- Tabs dynamically rendered -->
+      </div>
+
+      <button class="tab-action-pill" onclick="closeOtherTabs()" title="Keep only active tab">✕ Close Others</button>
     </div>
-    <button class="tab-action-pill" onclick="closeOtherTabs()" title="Close all extra tabs and keep only current">✕ Close Others</button>
+
+    <!-- Safari Omnibar Toolbar -->
+    <div class="nav-toolbar">
+      <div class="nav-nav-group">
+        <button class="icon-btn" id="btn-back" title="Back">←</button>
+        <button class="icon-btn" id="btn-forward" title="Forward">→</button>
+        <button class="icon-btn" id="btn-reload" title="Reload">↻</button>
+      </div>
+
+      <div class="url-container">
+        <span class="url-lock-icon">🔒</span>
+        <input type="text" id="url-input" placeholder="Search or enter website name" spellcheck="false" autocomplete="off" />
+        <span class="url-shortcut-hint">↵</span>
+      </div>
+
+      <button class="btn-go" id="btn-go">
+        <span>Go</span>
+      </button>
+
+      <!-- Apple Segmented Sliding Control for Co-Pilot Mode -->
+      <div class="apple-segmented-control" id="copilot-segmented-control" onclick="toggleCopilotMode()" title="Toggle Autonomous AI vs Human Takeover">
+        <div class="segmented-pill"></div>
+        <div class="segmented-option opt-autonomous">
+          <span class="status-indicator-dot"></span>
+          <span>Autonomous</span>
+        </div>
+        <div class="segmented-option opt-takeover">
+          <span class="status-indicator-dot"></span>
+          <span>Takeover</span>
+        </div>
+      </div>
+
+      <!-- DevTools / Audit Drawer Toggle -->
+      <button class="devtools-btn" id="btn-devtools" onclick="toggleDevTools()" title="Toggle Execution Timeline & DevTools (Ctrl+L / ⌘L)">
+        <span>⚡ Audit</span>
+        <span class="devtools-counter" id="audit-badge-counter">0</span>
+      </button>
+
+      <div class="connection-status live" id="ws-status">
+        <span class="status-dot"></span>
+        <span id="ws-status-text">Live</span>
+      </div>
+    </div>
+
+    <!-- Safari Quick Shortcuts / Favorites Row -->
+    <div class="shortcuts-bar">
+      <span class="shortcuts-label">Favorites:</span>
+      <button class="shortcut-pill" onclick="openInNewTab('https://web.whatsapp.com')">WhatsApp Web</button>
+      <button class="shortcut-pill" onclick="openInNewTab('https://accounts.google.com')">Google / Gmail</button>
+      <button class="shortcut-pill" onclick="openInNewTab('https://www.linkedin.com/login')">LinkedIn</button>
+      <button class="shortcut-pill" onclick="openInNewTab('https://github.com/login')">GitHub</button>
+      <button class="shortcut-pill" onclick="openInNewTab('https://x.com/login')">X / Twitter</button>
+    </div>
   </div>
 
-  <!-- Secondary Navigation & URL Bar -->
-  <div class="nav-toolbar">
-    <button class="icon-btn" id="btn-back" title="Back">←</button>
-    <button class="icon-btn" id="btn-forward" title="Forward">→</button>
-    <button class="icon-btn" id="btn-reload" title="Reload">↻</button>
-
-    <div class="url-container">
-      <span class="url-badge">WEB</span>
-      <input type="text" id="url-input" placeholder="Enter target URL or search query and press Enter" spellcheck="false" autocomplete="off" />
-    </div>
-
-    <button class="btn-go" id="btn-go">Navigate ↵</button>
-
-    <!-- Co-Pilot Mode Toggle (Autonomous vs Human Takeover) -->
-    <div class="copilot-toggle-container" id="copilot-mode-toggle" onclick="toggleCopilotMode()" title="Toggle between Autonomous AI Agent and Manual Human Takeover">
-      <span class="copilot-dot"></span>
-      <span id="copilot-mode-text">Autonomous</span>
-    </div>
-
-    <!-- DevTools / Audit Drawer Toggle -->
-    <button class="devtools-btn" id="btn-devtools" onclick="toggleDevTools()" title="Toggle Execution Timeline & DevTools (Ctrl+L)">
-      <span>⚡ Audit & Logs</span>
-      <span class="devtools-counter" id="audit-badge-counter">0</span>
-    </button>
-
-    <div class="connection-status live" id="ws-status">
-      <span class="status-dot"></span>
-      <span id="ws-status-text">Studio Live</span>
-    </div>
-  </div>
-
-  <!-- Quick Shortcuts Bar (Opens in new tab) -->
-  <div class="shortcuts-bar">
-    <span class="shortcuts-label">Fast Access:</span>
-    <button class="shortcut-pill" onclick="openInNewTab('https://web.whatsapp.com')">+ WhatsApp Web</button>
-    <button class="shortcut-pill" onclick="openInNewTab('https://accounts.google.com')">+ Google / Gmail</button>
-    <button class="shortcut-pill" onclick="openInNewTab('https://www.linkedin.com/login')">+ LinkedIn</button>
-    <button class="shortcut-pill" onclick="openInNewTab('https://github.com/login')">+ GitHub</button>
-    <button class="shortcut-pill" onclick="openInNewTab('https://x.com/login')">+ X / Twitter</button>
-  </div>
-
-  <!-- Notification Banner for Logins & 2FA -->
+  <!-- macOS Style Notification Banner for Logins & 2FA -->
   <div id="user-prompt-banner">
     <div class="banner-left">
       <span class="banner-dot"></span>
@@ -872,30 +1188,33 @@
     <button class="banner-btn" id="btn-login-done">Done Logging In / Continue Agent</button>
   </div>
 
-  <!-- Main Screencast Viewport -->
+  <!-- Main Screencast Viewport Stage -->
   <div id="viewport-container">
     <canvas id="screen-canvas" tabindex="0"></canvas>
 
-    <!-- Claymorphic Agent Cursor Overlay -->
+    <!-- Apple VisionOS Style Clay Cursor Overlay -->
     <div id="agent-cursor" class="agent-cursor">
       <div class="clay-pointer"></div>
       <div class="clay-badge" id="agent-cursor-label">Agent</div>
     </div>
 
-    <!-- Floating Live Thinking & Activity HUD (Front-of-the-End) -->
+    <!-- Apple Dynamic Island Style Floating HUD -->
     <div id="thinking-hud" class="thinking-hud">
-      <div class="thinking-pulse-dot"></div>
+      <div class="thinking-pulse-wrap">
+        <div class="thinking-pulse-ring"></div>
+        <div class="thinking-pulse-core"></div>
+      </div>
       <div class="thinking-content">
-        <span class="thinking-tag">AI Agent Live Thinking</span>
+        <span class="thinking-tag">AI Live Thinking</span>
         <span class="thinking-text" id="live-thought-text">Agent is ready. Waiting for instructions...</span>
       </div>
       <div class="thinking-badge" id="live-action-badge">Ready</div>
     </div>
 
-    <!-- DevTools & Observability Drawer -->
+    <!-- macOS Inspector Drawer (DevTools & Observability) -->
     <aside id="devtools-drawer" class="devtools-drawer">
       <div class="drawer-header">
-        <div class="drawer-tabs">
+        <div class="drawer-segmented">
           <button class="drawer-tab-btn active" id="tab-btn-timeline" onclick="switchDevTab('timeline')">Timeline</button>
           <button class="drawer-tab-btn" id="tab-btn-console" onclick="switchDevTab('console')">Console (<span id="console-count">0</span>)</button>
           <button class="drawer-tab-btn" id="tab-btn-network" onclick="switchDevTab('network')">Network (<span id="network-count">0</span>)</button>
@@ -912,9 +1231,7 @@
           <span>STEP-BY-STEP AUDIT TRAIL</span>
           <button class="text-link-btn" onclick="clearAuditTimeline()">Clear</button>
         </div>
-        <div class="timeline-list" id="timeline-list">
-          <!-- Injected dynamically -->
-        </div>
+        <div class="timeline-list" id="timeline-list"></div>
       </div>
 
       <!-- Console Pane -->
@@ -935,17 +1252,17 @@
     </aside>
   </div>
 
-  <!-- Footer Information -->
+  <!-- macOS Bottom Status Footer -->
   <footer>
     <div class="footer-left">
-      <span>Agent Virtual Display (7654)</span>
+      <span>Agent Studio Display</span>
       <span>Profile: <span class="profile-pill">~/.agent-live-browser/profile</span></span>
       <span id="resolution-info">1280 × 800</span>
     </div>
     <div class="footer-right">
       <label class="toggle-wrap">
         <input type="checkbox" id="interactive-mode" checked>
-        <span>Interactive Control (Clicks & Keys)</span>
+        <span>Interactive Control</span>
       </label>
       <span id="agent-indicator">Agent: Idle</span>
     </div>
@@ -976,8 +1293,8 @@
 
     function resizeCanvas() {
       const container = document.getElementById('viewport-container');
-      const cw = container.clientWidth - 24;
-      const ch = container.clientHeight - 24;
+      const cw = container.clientWidth - 28;
+      const ch = container.clientHeight - 28;
       scale = Math.min(cw / browserWidth, ch / browserHeight, 1);
       canvas.style.width = Math.round(browserWidth * scale) + 'px';
       canvas.style.height = Math.round(browserHeight * scale) + 'px';
@@ -986,7 +1303,7 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // Render Tab Bar with individual + button after each tab
+    // Render Safari-style Tab Bar with single attached + button
     function renderTabs(tabs, currentActive) {
       currentTabs = tabs || [];
       activeIndex = currentActive;
@@ -1001,6 +1318,10 @@
           }
         };
 
+        const favicon = document.createElement('span');
+        favicon.className = 'tab-favicon';
+        favicon.innerText = tab.active ? '🌐' : '◽';
+
         const titleSpan = document.createElement('span');
         titleSpan.className = 'tab-title';
         titleSpan.innerText = tab.title || 'Tab ' + (tab.index + 1);
@@ -1014,6 +1335,7 @@
           closeTab(tab.index);
         };
 
+        tabEl.appendChild(favicon);
         tabEl.appendChild(titleSpan);
         tabEl.appendChild(closeBtn);
         tabsList.appendChild(tabEl);
@@ -1073,12 +1395,12 @@
       }
     }
 
-    async function newTab() {
+    async function newTab(url = 'https://www.google.com') {
       try {
         const resp = await fetch('/api/tabs/new', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: 'https://www.google.com' })
+          body: JSON.stringify({ url })
         });
         const data = await resp.json();
         renderTabs(data.tabs, data.index);
@@ -1087,8 +1409,15 @@
       }
     }
 
-    const addBtn = document.getElementById('btn-add-tab');
-    if (addBtn) addBtn.addEventListener('click', newTab);
+    async function closeOtherTabs() {
+      try {
+        const resp = await fetch('/api/tabs/close_others', { method: 'POST' });
+        const data = await resp.json();
+        renderTabs(data.tabs, data.activeIndex);
+      } catch (err) {
+        console.error('Failed to close other tabs:', err);
+      }
+    }
 
     // WebSocket Connection
     function connectWS() {
@@ -1099,7 +1428,7 @@
       ws.onopen = () => {
         wsStatus.classList.remove('offline');
         wsStatus.classList.add('live');
-        wsStatusText.innerText = 'Studio Live';
+        wsStatusText.innerText = 'Live';
       };
 
       ws.onclose = () => {
@@ -1191,16 +1520,6 @@
       }
     }
 
-    async function closeOtherTabs() {
-      try {
-        const resp = await fetch('/api/tabs/close_others', { method: 'POST' });
-        const data = await resp.json();
-        renderTabs(data.tabs, data.activeIndex);
-      } catch (err) {
-        console.error('Failed to close other tabs:', err);
-      }
-    }
-
     function updateAgentCursor(x, y, action) {
       if (!agentCursor) return;
       const rect = canvas.getBoundingClientRect();
@@ -1212,7 +1531,7 @@
       if (action !== 'type' && (x > 0 || y > 0)) {
         const screenX = canvasLeft + (x * scale);
         const screenY = canvasTop + (y * scale);
-        // Smoothly slides from previous left/top to target left/top!
+        // Signature fluid Apple spring glide from old coordinates to new!
         agentCursor.style.left = screenX + 'px';
         agentCursor.style.top = screenY + 'px';
       }
@@ -1224,11 +1543,9 @@
       }, 5000);
 
       if (action === 'press') {
-        // Live Click: Cursor shrinks down visibly
         agentCursor.classList.add('pressing');
         agentCursorLabel.innerText = 'Clicking...';
       } else if (action === 'release') {
-        // Spring back to normal shape & trigger ripple wave
         agentCursor.classList.remove('pressing');
         agentCursorLabel.innerText = 'Agent';
 
@@ -1243,7 +1560,6 @@
           setTimeout(() => ripple.remove(), 600);
         }
       } else if (action === 'click') {
-        // Combined click: shrink down, hold, then release back to normal
         agentCursor.classList.add('pressing');
         agentCursorLabel.innerText = 'Clicking...';
         setTimeout(() => {
@@ -1397,8 +1713,7 @@
 
     // --- Enterprise Co-Pilot & DevTools Controller ---
     let currentCopilotMode = 'AUTONOMOUS';
-    const copilotToggle = document.getElementById('copilot-mode-toggle');
-    const copilotText = document.getElementById('copilot-mode-text');
+    const copilotControl = document.getElementById('copilot-segmented-control');
     const devtoolsDrawer = document.getElementById('devtools-drawer');
     const auditBadgeCounter = document.getElementById('audit-badge-counter');
     const timelineList = document.getElementById('timeline-list');
@@ -1414,11 +1729,9 @@
     function updateCopilotUI(mode) {
       currentCopilotMode = mode;
       if (mode === 'HUMAN_TAKEOVER') {
-        copilotToggle.classList.add('takeover');
-        copilotText.innerText = 'Human Takeover';
+        copilotControl.classList.add('takeover-active');
       } else {
-        copilotToggle.classList.remove('takeover');
-        copilotText.innerText = 'Autonomous';
+        copilotControl.classList.remove('takeover-active');
       }
     }
 
