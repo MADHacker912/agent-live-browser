@@ -737,110 +737,6 @@
     }
 
     /* -------------------------------------------------------------
-       Apple Dynamic Island Style Live Thinking Process HUD
-       ------------------------------------------------------------- */
-    .thinking-hud {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(0);
-      background: rgba(18, 18, 24, 0.78);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--border-subtle);
-      border-radius: 9999px;
-      padding: 8px 20px 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 
-        0 20px 50px rgba(0, 0, 0, 0.7),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      z-index: 50;
-      max-width: 80%;
-      transition: 
-        transform 0.32s var(--spring-ease),
-        box-shadow 0.32s var(--spring-ease),
-        border-color 0.32s var(--spring-ease),
-        background 0.32s var(--spring-ease);
-      user-select: none;
-    }
-    .thinking-hud:hover {
-      transform: translateX(-50%) translateY(-2px);
-      border-color: var(--border-highlight);
-      box-shadow: 
-        0 26px 60px rgba(0, 0, 0, 0.8),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-
-    /* Apple Intelligence Glow Ring */
-    .thinking-pulse-wrap {
-      width: 24px;
-      height: 24px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .thinking-pulse-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: conic-gradient(from 180deg at 50% 50%, #f4efe6 0deg, #d6cfc2 120deg, #9e9686 240deg, #f4efe6 360deg);
-      filter: blur(4px);
-      opacity: 0.7;
-      animation: appleSiriSpin 4s linear infinite;
-    }
-    @keyframes appleSiriSpin {
-      100% { transform: rotate(360deg); }
-    }
-    .thinking-pulse-core {
-      position: relative;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--cream-100);
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
-      animation: appleBreathe 2.2s infinite ease-in-out;
-    }
-
-    .thinking-content {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-    .thinking-tag {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--sand-500);
-    }
-    .thinking-text {
-      font-size: 12.5px;
-      font-weight: 500;
-      color: var(--cream-100);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 540px;
-      transition: color 0.2s;
-    }
-    .thinking-badge {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-hairline);
-      color: var(--cream-300);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 12px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    /* -------------------------------------------------------------
        macOS Inspector Drawer (DevTools & Audit Timeline)
        ------------------------------------------------------------- */
     .devtools-drawer {
@@ -1198,19 +1094,6 @@
       <div class="clay-badge" id="agent-cursor-label">Agent</div>
     </div>
 
-    <!-- Apple Dynamic Island Style Floating HUD -->
-    <div id="thinking-hud" class="thinking-hud">
-      <div class="thinking-pulse-wrap">
-        <div class="thinking-pulse-ring"></div>
-        <div class="thinking-pulse-core"></div>
-      </div>
-      <div class="thinking-content">
-        <span class="thinking-tag">AI Live Thinking</span>
-        <span class="thinking-text" id="live-thought-text">Agent is ready. Waiting for instructions...</span>
-      </div>
-      <div class="thinking-badge" id="live-action-badge">Ready</div>
-    </div>
-
     <!-- macOS Inspector Drawer (DevTools & Observability) -->
     <aside id="devtools-drawer" class="devtools-drawer">
       <div class="drawer-header">
@@ -1258,12 +1141,17 @@
       <span>Agent Studio Display</span>
       <span>Profile: <span class="profile-pill">~/.agent-live-browser/profile</span></span>
       <span id="resolution-info">1280 × 800</span>
+      <span id="footer-thought-wrap" style="display: inline-flex; align-items: center; gap: 6px; color: var(--sand-500); max-width: 440px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--apple-blue); flex-shrink: 0;"></span>
+        <span id="live-thought-text" style="color: var(--cream-300);">Agent ready</span>
+      </span>
     </div>
     <div class="footer-right">
       <label class="toggle-wrap">
         <input type="checkbox" id="interactive-mode" checked>
         <span>Interactive Control</span>
       </label>
+      <span id="live-action-badge" style="display: none;">Ready</span>
       <span id="agent-indicator">Agent: Idle</span>
     </div>
   </footer>
