@@ -349,14 +349,15 @@ class BrowserManager:
             return True
 
     async def broadcast_thought(self, thought, action=None):
-        self.current_thought = thought
+        clean_thought = (thought.split('\n')[0].strip() if thought else "")
+        self.current_thought = clean_thought
         if action:
             self.agent_status = action
         if not self.ws_clients:
             return
         payload = json.dumps({
             "type": "thought",
-            "thought": thought,
+            "thought": clean_thought,
             "action": action or self.agent_status
         })
         coros = [ws.send_str(payload) for ws in list(self.ws_clients) if not ws.closed]

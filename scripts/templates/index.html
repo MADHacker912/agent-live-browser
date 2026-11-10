@@ -582,16 +582,22 @@
        ------------------------------------------------------------- */
     #user-prompt-banner {
       display: none;
-      background: rgba(40, 28, 16, 0.94);
+      background: rgba(38, 26, 14, 0.94);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
       border-bottom: 1px solid rgba(234, 179, 8, 0.35);
       color: var(--cream-100);
-      padding: 10px 18px;
+      padding: 0 16px;
+      height: 46px;
+      max-height: 46px;
+      flex-shrink: 0;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       font-size: 13px;
       z-index: 40;
+      box-sizing: border-box;
+      overflow: hidden;
       animation: bannerSlideDown 0.35s var(--spring-ease) forwards;
     }
     @keyframes bannerSlideDown {
@@ -599,7 +605,15 @@
       to { transform: translateY(0); opacity: 1; }
     }
     #user-prompt-banner.active { display: flex; }
-    .banner-left { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .banner-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+    }
     .banner-dot {
       width: 8px;
       height: 8px;
@@ -607,20 +621,166 @@
       border-radius: 50%;
       box-shadow: 0 0 10px rgba(255, 159, 10, 0.7);
       animation: appleBreathe 1.8s infinite ease-in-out;
+      flex-shrink: 0;
+    }
+    .banner-message-wrap {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    #banner-message {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex: 1;
+      font-size: 12px;
+      color: var(--cream-100);
+    }
+    .banner-details-btn {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 6px;
+      color: var(--cream-200);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .banner-details-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+    .banner-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
     .banner-btn {
       background: var(--cream-200);
       color: #121214;
       border: 1px solid rgba(255, 255, 255, 0.4);
       border-radius: 8px;
-      padding: 6px 14px;
+      padding: 5px 12px;
       font-weight: 600;
       cursor: pointer;
       font-size: 12px;
       transition: background 0.15s, transform 0.12s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .banner-btn:hover { background: #ffffff; }
     .banner-btn:active { transform: scale(0.95); }
+    .banner-dismiss-btn {
+      background: transparent;
+      border: 1px solid var(--border-hairline);
+      border-radius: 7px;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sand-500);
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .banner-dismiss-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--cream-100);
+      border-color: var(--border-subtle);
+    }
+    .banner-dismiss-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Banner Log Details Popover Dialog */
+    .banner-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .banner-modal-overlay.active {
+      display: flex;
+    }
+    .banner-modal-card {
+      background: rgba(22, 22, 28, 0.95);
+      border: 1px solid var(--border-highlight);
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      width: 100%;
+      max-width: 680px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalPopIn 0.24s var(--spring-ease);
+    }
+    @keyframes modalPopIn {
+      0% { transform: scale(0.94); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .banner-modal-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-hairline);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .banner-modal-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cream-100);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .banner-modal-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      max-height: calc(80vh - 100px);
+    }
+    .banner-modal-pre {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.55;
+      color: var(--cream-300);
+      background: rgba(10, 10, 14, 0.85);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hairline);
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: text;
+    }
+    .banner-modal-footer {
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid var(--border-hairline);
+      background: rgba(255, 255, 255, 0.02);
+    }
 
     /* -------------------------------------------------------------
        Viewport Stage & Canvas (macOS Bezel Look)
@@ -1079,9 +1239,36 @@
   <div id="user-prompt-banner">
     <div class="banner-left">
       <span class="banner-dot"></span>
-      <span id="banner-message">Authentication or user verification required.</span>
+      <div class="banner-message-wrap">
+        <span id="banner-message">Authentication or user verification required.</span>
+        <button type="button" class="banner-details-btn" id="banner-details-btn" onclick="toggleBannerDetails()" title="View full log">
+          <span>📜 View Log</span>
+        </button>
+      </div>
     </div>
-    <button class="banner-btn" id="btn-login-done">Done Logging In / Continue Agent</button>
+    <div class="banner-right-actions">
+      <button class="banner-btn" id="btn-login-done">Done Logging In / Continue Agent</button>
+      <button class="banner-dismiss-btn" id="btn-banner-dismiss" onclick="dismissBanner()" title="Dismiss notification">✕</button>
+    </div>
+  </div>
+
+  <!-- Banner Full Log Modal Dialog -->
+  <div class="banner-modal-overlay" id="banner-modal" onclick="if(event.target===this)closeBannerDetails()">
+    <div class="banner-modal-card">
+      <div class="banner-modal-header">
+        <div class="banner-modal-title">
+          <span>⚠️ Agent Handoff / Error Details</span>
+        </div>
+        <button class="banner-dismiss-btn" onclick="closeBannerDetails()" title="Close">✕</button>
+      </div>
+      <div class="banner-modal-body">
+        <pre class="banner-modal-pre" id="banner-details-pre"></pre>
+      </div>
+      <div class="banner-modal-footer">
+        <button class="tab-action-pill" onclick="copyBannerLog()">📋 Copy Details</button>
+        <button class="banner-btn" onclick="closeBannerDetails()">Close</button>
+      </div>
+    </div>
   </div>
 
   <!-- Main Screencast Viewport Stage -->
@@ -1376,10 +1563,9 @@
               agentIndicator.innerText = 'Agent: ' + msg.agentStatus;
             }
             if (msg.userPrompt) {
-              bannerMsg.innerText = msg.userPrompt;
-              banner.classList.add('active');
+              showUserPrompt(msg.userPrompt);
             } else {
-              banner.classList.remove('active');
+              dismissBanner();
             }
           }
         } catch (e) {
@@ -1396,9 +1582,73 @@
     const liveActionBadge = document.getElementById('live-action-badge');
     let cursorHideTimeout = null;
 
+    let rawUserPromptText = '';
+
+    function showUserPrompt(text) {
+      rawUserPromptText = text || '';
+      if (!rawUserPromptText.trim()) {
+        dismissBanner();
+        return;
+      }
+
+      // Extract first clean summary line
+      const lines = rawUserPromptText.split('\n').map(l => l.trim()).filter(Boolean);
+      const summary = lines[0] || 'Authentication or user verification required.';
+
+      bannerMsg.innerText = summary;
+      bannerMsg.title = summary;
+
+      const detailsBtn = document.getElementById('banner-details-btn');
+      const detailsPre = document.getElementById('banner-details-pre');
+      if (detailsPre) {
+        detailsPre.innerText = rawUserPromptText;
+      }
+
+      if (detailsBtn) {
+        if (lines.length > 1 || rawUserPromptText.length > 90) {
+          detailsBtn.style.display = 'inline-flex';
+        } else {
+          detailsBtn.style.display = 'none';
+        }
+      }
+
+      banner.classList.add('active');
+      resizeCanvas();
+    }
+
+    function dismissBanner() {
+      banner.classList.remove('active');
+      closeBannerDetails();
+      resizeCanvas();
+    }
+
+    function toggleBannerDetails() {
+      const modal = document.getElementById('banner-modal');
+      if (modal) {
+        modal.classList.toggle('active');
+      }
+    }
+
+    function closeBannerDetails() {
+      const modal = document.getElementById('banner-modal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    function copyBannerLog() {
+      if (rawUserPromptText) {
+        navigator.clipboard.writeText(rawUserPromptText).then(() => {
+          alert('Copied log details to clipboard!');
+        }).catch(() => {});
+      }
+    }
+
     function updateThinkingHUD(thought, action) {
       if (thought && liveThoughtText) {
-        liveThoughtText.innerText = thought;
+        const cleanThought = thought.split('\n')[0].trim();
+        liveThoughtText.innerText = cleanThought;
+        liveThoughtText.title = cleanThought;
       }
       if (action && liveActionBadge) {
         liveActionBadge.innerText = action;
@@ -1596,7 +1846,7 @@
 
     document.getElementById('btn-login-done').addEventListener('click', () => {
       fetch('/api/user_done', { method: 'POST' });
-      banner.classList.remove('active');
+      dismissBanner();
     });
 
     // --- Enterprise Co-Pilot & DevTools Controller ---
